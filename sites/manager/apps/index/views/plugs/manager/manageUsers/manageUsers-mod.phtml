@@ -1,0 +1,344 @@
+var conn = new Ext.data.Connection();
+var manageUsersEditTreeGroups = "gid";
+var manageUsersToolbar = new Ext.Toolbar();
+
+manageUsersToolbar.add ( {
+		text:'Save',
+		tooltip: 'Save modifications',
+		icon: '<?php echo $this->get('img')?>save.png',
+		handler: function() {
+			saveEditorUser();
+		}
+	},
+		'-', {
+			text: 'Delete',
+			icon: '<?php echo $this->get('img')?>cross.png',
+			handler: confirmDeleteUser
+	}
+);
+
+var manageUsers = {
+	id: 'manageUsers-panel',
+	title: 'EnsKa Core Manager - Manage users',
+	//bodyStyle: 'padding:10px',
+	autoScroll: true,
+	contentEl: 'manageUsers-content',
+	autoScroll: true,
+	items:
+	[
+		manageUsersToolbar
+	]
+};
+
+var usersDataStore = new Ext.data.Store ( {
+		id: 'users-datastore',
+		proxy: new Ext.data.HttpProxy ( {
+				url:'?act=loadInterface&lt=UsersGrid'
+			}
+		),
+		reader: new Ext.data.JsonReader ( {
+				root: 'results',
+				totalProperty: 'total',
+				id: 'id'
+			}, [ 
+				{name: 'UID', type: 'int', mapping: 'uid', width: 5},
+				{name: 'Login', type: 'string', mapping: 'login', width: 200},
+				{name: 'Mail', type: 'string', mapping: 'mail', width: 15},
+				{name: 'First', type: 'string', mapping: 'first'},
+				{name: 'Last', type: 'string', mapping: 'last'},
+				<?php
+					$properties = getUserProperties();
+					$i = 0;
+					$nb = count($properties);
+					while ($i < $nb) {
+						echo "{name: '".ucfirst($properties[$i])."', type: 'string', mapping: '".$properties[$i]."'},"."\n\t\t\t";
+						$i++;
+					}
+				?>
+			]
+		),
+		sortInfo: {
+			field: 'UID',
+			direction: "ASC"
+		}
+	}
+);
+
+var usersColumnModel = new Ext.grid.ColumnModel ( [ {
+			header: '# UID',
+			readOnly: true,
+			dataIndex: 'UID',
+			width: 45
+		}, {
+			header: 'Login',
+			dataIndex: 'Login',
+			editor: new Ext.form.TextField ( {
+					allowBlank: false,
+					maxLength: 20,
+					maskRe: /([a-zA-Z0-9\s]+)$/
+				}
+			),
+			width: 300
+		}, {
+			header: 'Mail',
+			dataIndex: 'Mail',
+			editor: new Ext.form.TextField ( {
+				  allowBlank: false,
+				  /*maskRe: /([a-zA-Z0-9\s]+)$/*/
+				}
+			),
+			width: 600
+		}
+	]
+);
+
+usersColumnModel.defaultSortable = true;
+var userListingEditorGrid =  new Ext.grid.EditorGridPanel ( {
+		border: false,
+		id: 'userListingEditorGrid',
+		store: usersDataStore,
+		cm: usersColumnModel,
+		enableColLock:false,
+		clicksToEdit:2,
+		selModel: new Ext.grid.RowSelectionModel ( {
+				singleSelect: true
+			}
+		),
+		height: 300,
+		anchor:'95%',
+		stateful: false
+	}
+);
+
+function saveGridUser(oGrid_event)
+{
+	var uid = oGrid_event.record.data.UID;
+	var	login = oGrid_event.record.data.Login;
+	var	mail = oGrid_event.record.data.Mail;
+	
+	var req = conn.request ( {
+			url: '?act=execPlg&plg=manageUsers',
+			method: 'POST',
+			params: "data=" + 'editByGrid::' + uid + '::' + login + '::' + mail,
+			success: function(resObj) {
+				if (resObj.responseText == "success") {
+					usersDataStore.commitChanges();
+					usersDataStore.reload();
+				}
+				else {
+					msgError(resObj.responseText);
+					usersDataStore.reload();
+				}
+			}
+		}
+	);	
+}
+
+function confirmDeleteUser()
+{
+	if(userListingEditorGrid.selModel.getCount() == 1) {
+		Ext.MessageBox.confirm('EnsKa Core Manager','Are you sure you want to delete ' + userListingEditorGrid.selModel.getSelected().json.login + ' ?', deleteUser);
+	}
+	else {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select a user!');
+	}
+}
+
+function deleteUser(btn)
+{
+	if(btn == 'yes') {
+		var selections = userListingEditorGrid.selModel.getSelections();
+		var wusers = new Array();
+		
+		for(i = 0; i < userListingEditorGrid.selModel.getCount(); i++) {
+			wusers.push(selections[i].json.uid);
+		}
+		
+		var encoded_array = wusers;
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=manageUsers',
+				method: 'POST',
+				params: "data=" + 'delete::' + encoded_array,
+				success: function(resObj) {
+					if (resObj.responseText == "success") {
+						usersDataStore.reload();
+					}
+					else {
+						msgError(resObj.responseText);
+						usersDataStore.reload();
+					}
+				}
+			}
+		);
+	}
+}
+
+var uEditro = {
+	id: 'uEditor-panel',
+	autoScroll: true,
+	bodyStyle: 'padding:10px',
+	contentEl: 'manageUserEdit',
+	autoScroll: true
+};
+
+var manageUsersTreeUsers = new Ext.tree.TreePanel ( {
+		title: 'Plateform groups',
+		id:'manage-users-users-panel',
+		iconCls:'icon-users',
+		border:true,
+		height: 175,
+		width: 200,
+		xtype: 'treepanel',
+		autoScroll: true,
+		rootVisible: true,
+		lines: true,
+		singleExpand: false,
+		useArrows: true,
+		animate: true,
+		dataUrl:'?act=loadInterface&lt=Groups',
+		enableDD:true,
+		ddGroup:'listUsr',
+		root: {
+			nodeType: 'async',
+			draggable:false,
+			text: 'Users',
+			id:'node-root',
+			iconCls:'tree-server'
+		}
+	}
+);
+
+var manageUsersEditGroups = new Ext.tree.TreePanel ( {
+		title: 'User groups',
+		id:'manage-user-groups-panel',
+		width: 200,
+		iconCls:'icon-users',
+		border:true,
+		height: 175,
+		xtype: 'treepanel',
+		autoScroll: true,
+		rootVisible: true,
+		lines: true,
+		singleExpand: true,
+		useArrows: true,
+		animate: true,
+		dataUrl:'?act=loadInterface&lt=AUTHUsers',
+		enableDD:true,
+		ddGroup:'listUsr',
+		root: {
+			nodeType: 'async',
+			draggable:false,
+			text: 'Groups',
+			iconCls:'tree-groups'
+		},
+		listeners: {
+			append: function (tree, parent, node, index) {
+				if (manageUsersEditTreeGroups == "gid") {
+					manageUsersEditTreeGroups = node.id;
+				}
+				else {
+					manageUsersEditTreeGroups = manageUsersEditTreeGroups + "/" + node.id;
+				}
+			},
+			beforemovenode: function (tree, node, oldParent, newParent, index) {
+				var newGroup = "";
+				var tmpGroup = manageUsersEditTreeGroups.split('/');
+				for (i=0; i<tmpGroup.length; i++) {
+					if((tmpGroup[i] != node.id) && (node.id != '') && (tmpGroup[i] != '')) {
+						if (newGroup == "") {
+							newGroup = tmpGroup[i];
+						}
+						else {
+							newGroup = newGroup + tmpGroup[i];
+						}
+						if ((i + 1) < tmpGroup.length) {
+							newGroup = newGroup + '/';
+						}
+					}
+				}
+				manageUsersEditTreeGroups = newGroup;
+			}
+			
+		}
+	}
+);
+
+function fillUserEditor()
+{
+	Ext.get('u-uid').dom.value = userListingEditorGrid.selModel.getSelected().json.uid;
+	Ext.get('u-login').dom.value = userListingEditorGrid.selModel.getSelected().json.login;
+	Ext.get('u-mail').dom.value = userListingEditorGrid.selModel.getSelected().json.mail;
+	Ext.get('u-first').dom.value = userListingEditorGrid.selModel.getSelected().json.first;
+	Ext.get('u-last').dom.value = userListingEditorGrid.selModel.getSelected().json.last;
+	Ext.get('u-password').dom.value = "";
+	<?php
+		$properties = getUserProperties();
+		$i = 0;
+		$nb = count($properties);
+		while ($i < $nb) {
+			echo "Ext.get('u-".$properties[$i]."').dom.value = userListingEditorGrid.selModel.getSelected().json.".$properties[$i].';'."\n\t";
+			$i++;
+		}
+	?>
+	
+	manageUsersEditTreeGroups = "gid";
+	var gidLoader = '?act=loadInterface&lt=Users&data=' + userListingEditorGrid.selModel.getSelected().json.uid + ';getUserGroups';
+	Ext.getCmp('manage-user-groups-panel').loader.dataUrl = gidLoader;
+	Ext.getCmp('manage-user-groups-panel').root.reload();
+	Ext.getCmp('manage-users-users-panel').root.reload();
+	manageUsersTreeUsers.getRootNode().expand();
+	manageUsersEditGroups.getRootNode().expand();
+}
+
+function saveEditorUser()
+{
+	var uid = Ext.get('u-uid').dom.value;
+	var	login = Ext.get('u-login').dom.value;
+	var	mail = Ext.get('u-mail').dom.value;
+	var	first = Ext.get('u-first').dom.value;
+	var	last = Ext.get('u-last').dom.value;
+	var	password = Ext.get('u-password').dom.value;
+	<?php
+		$properties = getUserProperties();
+		$i = 0;
+		$nb = count($properties);
+		while ($i < $nb) {
+			echo 'var '.$properties[$i]." = Ext.get('u-".$properties[$i]."').dom.value".';'."\n\t";
+			$i++;
+		}
+		
+		$i = 0;
+		$data = "uid + '::' + login + '::' + mail + '::' + first + '::' + last + '::' +  password + '::' + ";
+		$dataSep = " + '::' + ";
+		while ($i < $nb) {
+			$data .= $properties[$i].$dataSep;
+			$i++;
+		}
+		$data = substr($data, 0, strlen($data) - strlen($dataSep)).',';
+	?>
+	
+	var req = conn.request ( {
+			url: '?act=execPlg&plg=manageUsers',
+			method: 'POST',
+			params: "data=" + 'editByEditor::' + manageUsersEditTreeGroups + '::' + <?php echo $data ?>
+			success: function(resObj) {
+				if (resObj.responseText == "success") {
+					usersDataStore.reload();
+					Ext.getCmp('manage-user-groups-panel').root.reload();
+					manageUsersEditTreeGroups = "gid";
+				}
+				else{
+					msgError(resObj.responseText);
+				}
+			}
+		}
+	);
+}
+
+usersDataStore.load();
+manageUsersTreeUsers.getRootNode().expand();
+userListingEditorGrid.render('usersGridRender');
+manageUsersEditGroups.render('renderUserGroups');
+manageUsersTreeUsers.render('renderPlateformUsers');
+userListingEditorGrid.on('afteredit', saveGridUser);
+userListingEditorGrid.on('rowClick', fillUserEditor);

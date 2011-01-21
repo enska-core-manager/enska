@@ -1,0 +1,233 @@
+var selectedCacheWebsite = 'none';
+var conn = new Ext.data.Connection();
+var manageCacheToolbar = new Ext.Toolbar();
+
+var websitesDataStore = new Ext.data.JsonStore ( {
+		autoDestroy: true,
+		url: '?act=loadInterface&lt=WebsiteData',
+		root: 'items',
+		idProperty: 'id',
+		fields: ['id', 'dpl_name', 'id_name']
+	}
+);
+
+manageCacheToolbar.add ( {
+		text: 'Save change',
+		icon: '<?php echo $this->get('img')?>save.png',
+		handler: function() {
+			if(selectedCacheWebsite == "none") {
+				Ext.MessageBox.alert('EnsKa Core Manager','You must select a website!');
+				return;
+			}
+			var status = Ext.get('status-cache').dom.value
+			if (status == 0) {
+				status = 2;
+			}
+			var folder = Ext.get('folder-cache').dom.value;
+			var timeC = Ext.get('time-cache').dom.value;
+			var timeS = Ext.get('time-sessions').dom.value;
+			var limiterC = Ext.get('limiter-sessions').dom.value;
+			var req = conn.request ( {
+					url: '?act=execPlg&plg=manageCache',
+					method: 'POST',
+					params: "data=" + 'edit::' + selectedCacheWebsite + '::' + status + '::' + folder + '::' + timeC + '::' + timeS + '::' + limiterC,
+					success: function(resObj) {
+						if (resObj.responseText != "success") {
+							msgError(resObj.responseText);	
+						}
+					}
+				}
+			);
+		}
+	}, {
+		text: 'Purge cache',
+		icon: '<?php echo $this->get('img')?>trash.png',
+		handler: function() {
+			if(selectedCacheWebsite == "none") {
+				Ext.MessageBox.alert('EnsKa Core Manager','You must select a website!');
+				return;
+			}
+			var folder = Ext.get('folder-cache').dom.value;
+			var req = conn.request ( {
+					url: '?act=execPlg&plg=manageCache',
+					method: 'POST',
+					params: "data=" + 'purge::' + folder,
+					success: function(resObj) {
+						if (resObj.responseText != "success") {
+							msgError(resObj.responseText);	
+						}
+					}
+				}
+			);
+		}
+	}, {
+		text: 'Website :'
+	}, {
+		xtype: 'combo',
+		id: 'combo-select-cache-websites',
+		name: 'comboSelectWebsites',
+		loadingText: 'Loading...',
+		typeAhead: true,
+		hideTrigger: false,
+		triggerAction: 'all',
+		mode: 'remote',
+		emptyText: '     Select a website...',
+		width: 200,
+		displayField: 'dpl_name',
+		valueField: 'id_name',
+		store: websitesDataStore,
+		minChars: 1,
+		onSelect: function (item) {
+			Ext.getCmp('combo-select-cache-websites').collapse();
+			Ext.getCmp('combo-select-cache-websites').setValue('     ' + item.data.dpl_name);
+			selectedCacheWebsite = item.data.id_name;
+			
+			var fillFields = conn.request ( {
+					url: '?act=loadInterface&lt=CacheSettings',
+					method: 'GET',
+					params: "data=" + item.data.id_name,
+					success: function(resObj) {
+						var res = resObj.responseText.split(';');
+						Ext.get('status-cache').dom.value = res[0];
+						Ext.get('folder-cache').dom.value = res[1];
+						Ext.get('time-cache').dom.value = res[2];
+						Ext.get('time-sessions').dom.value = res[3];
+						Ext.get('limiter-sessions').dom.value = res[4];
+						
+						excludesCacheDataStore.removeAll();
+						var	urlLoader = '?act=loadInterface&lt=CacheExcludes&data=' + item.data.id_name;
+						excludesCacheDataStore.proxy.conn.url = urlLoader;
+						excludesCacheDataStore.reload();
+					}
+				}
+			);
+			
+		}
+	}
+);
+
+var manageCache = {
+	id: 'manageCache-panel',
+	title: 'EnsKa Core Manager - Cache manager',
+	autoScroll: true,
+	contentEl: 'manageCache-content',
+	autoScroll: true,
+	items: [
+		manageCacheToolbar
+	]
+};
+
+var excludesCacheDataStore = new Ext.data.Store ( {
+		id: 'excludes-cache-datastore',
+		proxy: new Ext.data.HttpProxy ( {
+				url:'?act=loadInterface&lt=ExcludesCacheGrid'
+			}
+		),
+		reader: new Ext.data.JsonReader ( {
+				root: 'results',
+				totalProperty: 'total',
+				id: 'id'
+			}, [ 
+				{name: 'ID', type: 'int', mapping: 'id'},
+				{name: 'URL', type: 'string', mapping: 'url'}
+			]
+		),
+		sortInfo: {
+			field: 'ID',
+			direction: "ASC"
+		}
+	}
+);
+
+var excludesCacheColumnModel = new Ext.grid.ColumnModel ( [ {
+			header: '#',
+			readOnly: true,
+			dataIndex: 'ID',
+			width: 25
+		}, {
+			header: 'URL',
+			dataIndex: 'URL',
+			width: 275
+		}
+	]
+);
+excludesCacheColumnModel.defaultSortable = true;
+
+var excludesCacheListingEditorGrid =  new Ext.grid.EditorGridPanel ( {
+		id: 'excludesCacheListingEditorGrid',
+		store: excludesCacheDataStore,
+		cm: excludesCacheColumnModel,
+		enableColLock:false,
+		clicksToEdit:2,
+		selModel: new Ext.grid.RowSelectionModel ( {
+				singleSelect: true
+			}
+		),
+		height: 100,
+		anchor:'95%',
+		stateful: false,
+		renderTo: 'renderForExcludesCache'
+	}
+);
+
+function addExcludesCache()
+{
+	if(selectedCacheWebsite == "none") {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select a website!');
+		return;
+	}
+	
+	var url = Ext.get('url-cache').dom.value;
+	var req = conn.request ( {
+			url: '?act=execPlg&plg=manageCache',
+			method: 'POST',
+			params: "data=" + 'addExclusion::' + selectedCacheWebsite + '::' + url,
+			success: function(resObj) {
+				if (resObj.responseText == "success") {
+					var	urlLoader = '?act=loadInterface&lt=CacheExcludes&data=' + selectedCacheWebsite;
+					excludesCacheDataStore.proxy.conn.url = urlLoader;
+					excludesCacheDataStore.reload();
+					Ext.get('url-cache').dom.value = "";
+				}
+				else {
+					msgError(resObj.responseText);	
+				}
+			}
+		}
+	);
+}
+
+function removeExcludesCache()
+{
+	if(selectedCacheWebsite == "none") {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select a website!');
+		return;
+	}
+	
+	if(excludesCacheListingEditorGrid.selModel.getCount() != 1) {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select a url to exclude!');
+		return;
+	}
+	
+	var url = excludesCacheListingEditorGrid.selModel.getSelected().json.id;
+	var req = conn.request ( {
+			url: '?act=execPlg&plg=manageCache',
+			method: 'POST',
+			params: "data=" + 'removeExclusion::' + selectedCacheWebsite + '::' + url,
+			success: function(resObj) {
+				if (resObj.responseText == "success") {
+					excludesCacheDataStore.removeAll();
+					var	urlLoader = '?act=loadInterface&lt=CacheExcludes&data=' + selectedCacheWebsite;
+					excludesCacheDataStore.proxy.conn.url = urlLoader;
+					excludesCacheDataStore.reload();
+				}
+				else {
+					msgError(resObj.responseText);	
+				}
+			}
+		}
+	);
+}
+
+Ext.get('btn-add-url-cache').on('click', addExcludesCache);
+Ext.get('btn-remove-url-cache').on('click', removeExcludesCache);

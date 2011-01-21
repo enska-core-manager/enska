@@ -1,0 +1,339 @@
+if (obj.id == "win-newWService")
+{
+	var aWebsite;
+	var treeAuth = "auth";
+	var treeUnAuth = "unauth";
+	var conn = new Ext.data.Connection();
+	
+	var ApaWebsiteDataStore = new Ext.data.JsonStore ( {
+			autoDestroy: true,
+			url: '?act=loadInterface&lt=WebsiteData',
+			root: 'items',
+			idProperty: 'id',
+			fields: ['id', 'dpl_name', 'id_name']
+		}
+	);
+	
+	var users = new Ext.tree.TreePanel ( {
+			title: 'Users',
+			id:'new-ws-users-panel',
+			cellCls:'td-new-website-users-panel',
+			iconCls:'icon-users',
+			border:true,
+			height: 175,
+			xtype: 'treepanel',
+			autoScroll: true,
+			rootVisible: true,
+			lines: true,
+			singleExpand: false,
+			useArrows: true,
+			animate: true,
+			dataUrl:'?act=loadInterface&lt=Users',
+			enableDD:true,
+			ddGroup:'listUsr',
+			root: {
+				nodeType: 'async',
+				draggable:false,
+				text: 'Users',
+				id:'node-root',
+				iconCls:'tree-server'
+			}
+		}
+	);
+				
+	var auth = new Ext.tree.TreePanel ( {
+			title: 'Authorized users',
+			id:'new-ws-auth-users-panel',
+			cellCls:'td-new-website-auth-users-panel',
+			iconCls:'icon-user-auth',
+			border:true,
+			height: 175,
+			xtype: 'treepanel',
+			autoScroll: true,
+			rootVisible: true,
+			lines: true,
+			singleExpand: true,
+			useArrows: true,
+			animate: true,
+			dataUrl:'?act=loadInterface&lt=AUTHUsers',
+			enableDD:true,
+			ddGroup:'listUsr',
+			root: {
+				nodeType: 'async',
+				draggable:false,
+				text: 'Users',
+				iconCls:'tree-valid'
+			},
+			listeners: {
+				append: function (tree, parent, node, index) {
+					treeAuth = treeAuth + "/" + node.id
+				},
+				beforemovenode: function (tree, node, oldParent, newParent, index) {
+					var newAuth = "";
+					var tmpAuth = treeAuth.split('/');
+					for (i=0; i<tmpAuth.length; i++){
+						if((tmpAuth[i] != node.id) && (node.id != '') && (tmpAuth[i] != '')){
+							newAuth = newAuth + tmpAuth[i] + '/';
+							if ((i+1) < tmpAuth.length){
+								newAuth = newAuth + '/';
+							}
+						}
+					}
+					treeAuth = newAuth;
+				}
+			}
+		}
+	);
+
+	var unAuth = new Ext.tree.TreePanel 
+	( {
+			title: 'Unauthorized users',
+			id:'new-ws-unauth-users-panel',
+			cellCls:'td-new-website-unauth-users-panel',
+			iconCls:'icon-user-unauth',
+			border:true,
+			height: 175,
+			xtype: 'treepanel',
+			autoScroll: true,
+			rootVisible: true,
+			lines: true,
+			singleExpand: true,
+			useArrows: true,
+			animate: true,
+			dataUrl:'?act=loadInterface&lt=UNAUTHUsers',
+			enableDD:true,
+			ddGroup:'listUsr',
+			root: {
+				nodeType: 'async',
+				draggable:false,
+				text: 'Users',
+				iconCls:'tree-stop'
+			},
+			listeners: {
+				append: function (tree, parent, node, index) {
+					treeUnAuth = treeUnAuth + "/" + node.id
+				},
+				beforemovenode: function (tree, node, oldParent, newParent, index) {
+					var newUnAuth = "";
+					var tmpUnAuth = treeUnAuth.split('/');
+					for (i=0; i<tmpUnAuth.length; i++) {
+						if((tmpUnAuth[i] != node.id) && (node.id != '') && (tmpUnAuth[i] != '')) {
+							newUnAuth = newUnAuth + tmpUnAuth[i];
+							if ((i+1) < tmpUnAuth.length) {
+								newUnAuth = newUnAuth + '/';
+							}
+						}
+					}
+					treeUnAuth = newUnAuth;
+				}			
+			}
+		}
+	);
+	
+	var newWSWizard =  {
+		xtype:'tabpanel',
+		plain: false,
+		activeTab: 0,
+		height:235,
+		deferredRender: false,
+		defaults:{bodyStyle:'padding:0px'},
+		items: [ {
+				title:'WEB Service informations',
+				id: 'new-ws-informations-form',
+				iconCls:'icon-infos',
+				layout:'form',
+				xtype: 'form',
+				html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -170px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>ws_add_b.png" width=128 height=128></div>',
+				defaults: {width: 230},
+				bodyStyle: 'padding-left: 230px; padding-top: 40px;',
+				items: [ {
+						id:'new-ws-id',
+						fieldLabel: 'ID-Name',
+						anchor:'95%',
+						name: 'idName',
+						xtype: 'textfield',
+						minLength: 3,
+						maxLength: 50,
+						minLengthText: 'WEB Service\'s ID-name must be at least 3 characters long.',
+						maxLengthText: 'WEB Service\'s ID-name must not be bigger than 100 characters long.',
+						blankText: 'You must give a web service\'s ID-name',
+						allowBlank:false
+					}, {
+						id: 'new-ws-website',
+						fieldLabel: 'Website',
+						xtype: 'combo',
+						name: 'comboSelectWSSite',
+						loadingText: 'Loading websites...',
+						typeAhead: true,
+						hideTrigger: false,
+						triggerAction: 'all',
+						mode: 'remote',
+						emptyText: 'Select a source website...',
+						anchor:'95%',
+						displayField: 'dpl_name',
+						valueField: 'id_name',
+						store: ApaWebsiteDataStore,
+						minChars: 3,
+						onSelect: function (item) {
+							Ext.getCmp('new-ws-website').collapse();
+							Ext.getCmp('new-ws-website').setValue(item.data.dpl_name);
+							aWebsite = item.data.id_name;
+						}
+					}, {
+						id:'new-ws-server',
+						fieldLabel: 'Host server',
+						anchor:'95%',
+						name: 'name',
+						xtype: 'textfield',
+						minLength: 3,
+						maxLength: 254,
+						minLengthText: 'WEB Service\'s host must be at least 3 characters long.',
+						maxLengthText: 'WEB Service\'s host must not be bigger than 20 characters long.',
+						blankText: 'You must give a web service\'s ip or host name',
+						value: '<?php echo 'ws.'.$this->get('domain'); ?>',
+						allowBlank:false
+					},
+					new Ext.form.TextArea ( {
+							id:'new-ws-description',
+							wrap:'on',
+							anchor:'95%',
+							fieldLabel: 'Description',
+						}
+					)
+				]
+			},
+			{	
+				title:'Security',
+				iconCls:'icon-lock-break',
+				baseCls:'x-plain',
+				layout:'table',
+				layoutConfig: {
+					columns: 3
+				},
+				items: [
+					users,
+					auth,
+					unAuth
+				]
+			}, {	
+				title:'Database options',
+				iconCls:'icon-database',
+				layout:'form',
+				xtype: 'form',
+				html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -150px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>database_opt_b.png" width=128 height=128></div>',
+				defaults: {width: 230},
+				bodyStyle: 'padding-left: 230px; padding-top: 40px;',
+				items: [ {
+						id:'new-ws-database',
+						fieldLabel: 'Database name',
+						anchor:'95%',
+						xtype: 'textfield',
+						allowBlank:true
+					}, {
+						id:'new-ws-prefix',
+						fieldLabel: 'Table prefix',
+						anchor:'95%',
+						xtype: 'textfield',
+						allowBlank:true
+					}, {
+						id:'new-ws-user',
+						fieldLabel: 'Database user',
+						anchor:'95%',
+						xtype: 'textfield',
+						allowBlank:true
+					}, {
+						id:'new-ws-passwd',
+						fieldLabel: 'Database password',
+						anchor:'95%',
+						xtype: 'textfield',
+						allowBlank:true
+					}, {
+						xtype: 'checkbox',
+						id:'create-wsdb-user',
+						fieldLabel: 'Generate a new database user',
+						anchor:'95%'
+					}
+				]
+			}
+		],
+		buttons: [ {
+				text: 'Create',
+				handler: function() {
+					var	idName = Ext.get('new-ws-id').dom.value;
+					var	host = Ext.get('new-ws-server').dom.value;
+					var	description = Ext.get('new-ws-description').dom.value;
+					
+					var	passwd = Ext.get('new-ws-passwd').dom.value;
+					if (Ext.get('new-ws-passwd').dom.value == '') {
+						var passwd = 1;
+					}
+					
+					var	db = Ext.get('new-ws-database').dom.value;
+					if (Ext.get('new-ws-database').dom.value == '') {
+						var db = 1;
+					}
+					
+					var user = Ext.get('new-ws-user').dom.value;
+					if (Ext.get('new-ws-user').dom.value == '') {
+						var user = 1;
+					}
+					
+					var	prefix = Ext.get('new-ws-prefix').dom.value;
+					if (Ext.get('new-ws-prefix').dom.value == '') {
+						var prefix = 1;
+					}
+					
+					var generate = 2;
+					if (Ext.get('create-wsdb-user').dom.checked) {
+						var generate = 1;
+					}
+					
+					
+					msgWait('EnsKa Core is creating the new web service ' + name +'...');
+					
+					var req = conn.request ( {
+							url: '?act=execPlg&plg=newWService',
+							method: 'POST',
+							params: "data=" + 'create::' + treeAuth + '::' + treeUnAuth + '::' + idName + '::' + description + '::' + aWebsite + '::' + host + '::' + db + '::' + prefix + '::' + user + '::' + passwd + '::' + generate,
+							success: function(resObj) {
+								if (resObj.responseText == 'success') {	
+									msgOk('The web service ' + name + ' has been created !');
+									wservicesDataStore.reload();
+									winNewWService.close();
+								}
+								else {
+									msgError(resObj.responseText);
+								}
+							}
+						}
+					);
+				}
+			},
+			{
+				text: 'Cancel',
+				handler: function() {
+					winNewWService.close();
+				}
+			}
+		]
+	};
+
+	var winNewWService = new Ext.Window ( {
+			closeAction: 'close',
+			layout: "fit",
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: "Create a new WEB Service",
+			width: 625,
+			height: 320,
+			border: false,
+			items: [
+				newWSWizard
+			]
+		}
+	);
+	
+	users.getRootNode().expand();
+	winNewWService.show();
+}

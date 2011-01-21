@@ -1,0 +1,104 @@
+if (obj.id == "win-newFramework")
+{
+	var conn = new Ext.data.Connection(); 
+	
+	var newFrameworkWizard =  {
+		plain: false,
+		height:235,
+		deferredRender: false,
+		id: 'new-framework-informations-form',
+		iconCls:'icon-infos',
+		layout:'form',
+		xtype: 'form',
+		html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -110px; left: -200px; position: relative;"><img src="ressources/sites/manager/index/images/framework_add_b.png" width=128 height=128></div>',
+		defaults: {width: 230},
+		bodyStyle: 'padding-left: 230px; padding-top: 60px;',
+		items: [ {
+				id:'new-framework-name',
+				fieldLabel: 'Name',
+				anchor:'95%',
+				xtype: 'textfield',
+				minLength: 3,
+				maxLength: 100,
+				minLengthText: 'Framework\'s name must be at least 3 characters long.',
+				maxLengthText: 'Framework\'s name must not be bigger than 100 characters long.',
+				blankText: 'You must give a framework\'s name',
+				allowBlank:false
+			}, {
+				id:'new-framework-id',
+				fieldLabel: 'ID-Name',
+				anchor:'95%',
+				xtype: 'textfield',
+				minLength: 3,
+				maxLength: 100,
+				minLengthText: 'Framework\'s ID-name must be at least 3 characters long.',
+				maxLengthText: 'Framework\'s ID-name must not be bigger than 100 characters long.',
+				blankText: 'You must give a framework\'s ID-name',
+				allowBlank:false
+			}, {
+				id:'new-framework-version',
+				fieldLabel: 'Version',
+				anchor:'95%',
+				xtype: 'textfield',
+				value: '1.0.0',
+				minLength: 1,
+				maxLength: 13,
+				minLengthText: 'Framework\'s version must be at least 1 character long.',
+				maxLengthText: 'Framework\'s version must not be bigger than 13 characters long.',
+				blankText: 'You must give a framework\'s version',
+				allowBlank:false
+			}
+		],
+		buttons: [ {
+				text: 'Create',
+				id: 'new-framework-save-btn',
+				handler: function() {
+					var name = Ext.get('new-framework-name').dom.value;
+					var	idName = Ext.get('new-framework-id').dom.value;
+					var	version = Ext.get('new-framework-version').dom.value;
+					msgWait('EnsKa Core is creating the new framework structure for ' + name +'...');
+					var req = conn.request ( {
+							url: '?act=execPlg&plg=newFramework',
+							method: 'POST',
+							params: "data=" + 'create::' + name + '::' + idName + '::' + version,
+							success: function(resObj) {
+								if (resObj.responseText == 'success') {	
+									msgOk('The framework structure for ' + name + ' has been created !');
+									frameworksPanelDataStore.reload();
+									winNewFramework.close();
+								}
+								else {
+									msgError(resObj.responseText);
+								}
+							}
+						}
+					);
+				}
+			},
+			{
+				text: 'Cancel',
+				handler: function() {
+					winNewFramework.close();
+				}
+			}
+		]
+	};
+
+	var winNewFramework = new Ext.Window ( {
+			closeAction: 'close',
+			layout: "fit",
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: "Create a new framework",
+			width: 625,
+			height: 250,
+			border: false,
+			items:  [
+				newFrameworkWizard
+			]
+		}
+	);
+	
+	winNewFramework.show();
+}

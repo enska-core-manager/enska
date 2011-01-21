@@ -1,0 +1,209 @@
+if (obj.id == "win-newPlugin")
+{
+	var conn = new Ext.data.Connection(); 
+	var pType;
+	var pWebsite;
+	var pShow;
+	
+	pTypes = [
+		['1', 'Panel'],
+		['2', 'Window']
+	];
+	
+	pShows = [
+		['1', 'Plug-in\'s menu'],
+		['2', 'Plug-in\'s browser'],
+		['3', 'Plug-in\'s browser and menu'],
+		['4', 'None']
+	];
+	
+	var pluginTypeDataStore = new Ext.data.ArrayStore ( {
+			fields: ['id', 'name'],
+			data : pTypes
+		}
+	);
+	
+	var pluginShowDataStore = new Ext.data.ArrayStore ( {
+			fields: ['id','name'],
+			data : pShows
+		}
+	);
+	
+	var pluginWebsiteDataStore = new Ext.data.JsonStore ( {
+			autoDestroy: true,
+			url: '?act=loadInterface&lt=WebsiteData',
+			root: 'items',
+			idProperty: 'id',
+			fields: [
+				'id',
+				'dpl_name',
+				'id_name'
+			]
+		}
+	);
+	
+	var newPluginWizard =  {
+		plain: false,
+		height:235,
+		deferredRender: false,
+		id: 'new-plugin-informations-form',
+		iconCls:'icon-infos',
+		layout:'form',
+		xtype: 'form',
+		html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -140px; left: -200px; position: relative;"><img src="ressources/sites/manager/index/images/plugin_add_b.png" width=128 height=128></div>',
+		defaults: {width: 230},
+		bodyStyle: 'padding-left: 230px; padding-top: 60px;',
+		items: [ {
+				id:'new-plugin-name',
+				fieldLabel: 'Name',
+				anchor:'95%',
+				name: 'name',
+				xtype: 'textfield',
+				minLength: 3,
+				maxLength: 50,
+				minLengthText: 'Plug-in\'s name must be at least 3 characters long.',
+				maxLengthText: 'Plug-in\'s name must not be bigger than 20 characters long.',
+				blankText: 'You must give a plug-in\'s name',
+				allowBlank:false
+			}, {
+				id:'new-plugin-id',
+				fieldLabel: 'ID-Name',
+				anchor:'95%',
+				name: 'idName',
+				xtype: 'textfield',
+				minLength: 3,
+				maxLength: 50,
+				minLengthText: 'Plug-in\'s ID-name must be at least 3 characters long.',
+				maxLengthText: 'Plug-in\'s ID-name must not be bigger than 100 characters long.',
+				blankText: 'You must give a plug-in\'s ID-name',
+				allowBlank:false
+			}, {
+				id: 'new-plugin-type',
+				fieldLabel: 'Type',
+				xtype: 'combo',
+				name: 'comboSelectPluginType',
+				loadingText: 'Loading types...',
+				typeAhead: true,
+				hideTrigger: false,
+				triggerAction: 'all',
+				mode: 'local',
+				emptyText: 'Select a plug-in type...',
+				anchor:'95%',
+				displayField: 'name',
+				valueField: 'id',
+				store: pluginTypeDataStore,
+				minChars: 3,
+				selectOnFocus: true,
+				forceSelection: true,
+				onSelect: function (item) {
+					Ext.getCmp('new-plugin-type').collapse();
+					Ext.getCmp('new-plugin-type').setValue(item.data.name);
+					pType = item.data.id;
+				}
+			}, {
+				id: 'new-plugin-website',
+				fieldLabel: 'Website',
+				xtype: 'combo',
+				name: 'comboSelectPluginSite',
+				loadingText: 'Loading websites...',
+				typeAhead: true,
+				hideTrigger: false,
+				triggerAction: 'all',
+				mode: 'remote',
+				emptyText: 'Select a destination website...',
+				anchor:'95%',
+				displayField: 'dpl_name',
+				valueField: 'id_name',
+				store: pluginWebsiteDataStore,
+				minChars: 3,
+				onSelect: function (item) {
+					Ext.getCmp('new-plugin-website').collapse();
+					Ext.getCmp('new-plugin-website').setValue(item.data.dpl_name);
+					pWebsite = item.data.id_name;
+				}
+			}, {
+				id: 'new-plugin-show',
+				fieldLabel: 'Display',
+				xtype: 'combo',
+				name: 'comboSelectPluginDisplay',
+				loadingText: 'Loading ...',
+				typeAhead: true,
+				hideTrigger: false,
+				triggerAction: 'all',
+				mode: 'local',
+				emptyText: 'Select a display mod ...',
+				anchor:'95%',
+				displayField: 'name',
+				valueField: 'id',
+				store: pluginShowDataStore,
+				minChars: 3,
+				selectOnFocus: true,
+				forceSelection: true,
+				onSelect: function (item) {
+					Ext.getCmp('new-plugin-show').collapse();
+					Ext.getCmp('new-plugin-show').setValue(item.data.name);
+					pShow = item.data.id;
+				}
+			}
+		],
+		buttons: [ {
+				text: 'Save',
+				id: 'new-plugin-save-btn',
+				handler: function() {
+					var name = Ext.get('new-plugin-name').dom.value;
+					var	idName = Ext.get('new-plugin-id').dom.value;
+					msgWait('EnsKa Core is creating the new plug-in ' + name +'...');
+					
+					var req = conn.request ( {
+							url: '?act=execPlg&plg=newPlugin',
+							method: 'POST',
+							params: "data=" + 'create::' + name + '::' + pType + '::' + pWebsite + '::' + pShow + '::' + idName,
+							success: function(resObj) {
+								if (resObj.responseText == 'success') {	
+									Ext.Msg.show ( {
+											title:'EnsKa Core Manager',
+											msg: 'The plug-in ' + name + ' has been created !<br><br>The manager going to be reloaded.',
+											buttons: Ext.Msg.OK,
+											icon: Ext.MessageBox.INFO,
+											fn: function () {
+												winNewPlugin.close();
+												setTimeout("document.location = 'index'", 1);
+											}
+										}
+									);
+								}
+								else {
+									msgError(resObj.responseText);
+								}
+							}
+						}
+					);
+				}
+			},
+			{
+				text: 'Cancel',
+				handler: function() {
+					winNewPlugin.close();
+				}
+			}
+		]
+	};
+
+	var winNewPlugin = new Ext.Window ( {
+			closeAction: 'close',
+			layout: "fit",
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: "Create a new plug-in",
+			width: 625,
+			height: 320,
+			border: false,
+			items:  [
+				newPluginWizard
+			]
+		}
+	);
+	
+	winNewPlugin.show();
+}

@@ -1,0 +1,81 @@
+
+<div id="manageUsersOptions-content">
+	<br>
+	<center>
+		<table>
+			<tr>
+				<td>
+					<div id="renderForAvailableUsersOptions"></div>
+				</td>
+			</tr>
+		</table>
+	</center>
+	<br>
+	<div id="mhead" style="width: 100%; border-bottom: 1px lightblue solid;">
+		<table cellpadding=0 cellspacing=0 border=0>
+			<tr>
+				<td width=20>
+					<?php $this->image('add.png', Array('type'=>'usr', 'width'=>'16', 'height'=>'16')); ?>
+				</td>
+				<td>Create a new user's otpion</td>
+			</tr>
+		</table>
+	</div>
+	<table>
+		<tr>
+			<td><h5>Field name :</h5></td>
+			<td>
+				<input type="text" class="textbox" name="uFieldName" id="u-fieldname" maxlength="20">
+			</td>
+		</tr>
+		<tr>
+			<td><h5>Field type :</h5></td>
+			<td>
+				<select class="textbox" name="uFieldType" id="u-fieldtype">
+					<option value="TINYINT">Tiny integer</option>
+					<option value="INTEGER">Integer</option>
+					<option value="FLOAT">Float</option>
+					<option value="DOUBLE">Double</option>
+					<option value="DATE">Date</option>
+					<option value="DATETIME">Date time</option>
+					<option value="TIMESTAMP">Time stamp</option>
+					<option value="CHAR">Char</option>
+					<option value="VARCHAR">Varchar</option>
+					<option value="BLOB">Blob</option>
+					<option value="LONGBLOB">Long blob</option>
+					<option value="TEXT">Text</option>
+					<option value="LONGTEXT">Long text</option>
+					<option value="ENUM">Enum</option>
+					<option value="BINARY">Binary</option>
+					<option value="BIT">Bit</option>
+					<option value="BOOLEAN">Boolean</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td><h5>Field size :</h5></td>
+			<td>
+				<input type="text" class="textbox" name="uFieldSize" id="u-fieldsize" maxlength="3" size="2em" value="0">
+			</td>
+		</tr>
+		<tr>
+			<td><h5>Default :</h5></td>
+			<td>
+				<input type="text" class="textbox" name="uFieldDefault" id="u-fielddefault">
+			</td>
+		</tr>
+		<tr>
+			<td><h5>Not null</h5></td>
+			<td>
+				<input type="checkbox" name="uFieldOptionNN" id="u-fieldoptionnn" value="NOT NULL">
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td></td>
+			<td>
+				<input type="button" id="addNewUserOptionField" value="Add">
+			</td>
+		</tr>
+	</table>
+</div>

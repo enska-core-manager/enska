@@ -1,0 +1,1331 @@
+var conn = new Ext.data.Connection();
+var manageDatabasesToolbar = new Ext.Toolbar();
+
+var rootLogin = 'none';
+var rootPassword = '';
+
+var manageDatabasesBackupMenu = new Ext.menu.Menu ( {
+		items: [ {
+				text: 'Import',
+				icon: '<?php echo $this->get('img')?>import.png',
+				handler: uploadSQLScript
+			}, {
+				text: 'Export',
+				icon: '<?php echo $this->get('img')?>export.png',
+				handler: showExportDBOptions
+			}
+		]
+	}
+);
+
+manageDatabasesToolbar.add ( {
+		text: 'New table',
+		icon: '<?php echo $this->get('img')?>table_add.png',
+		handler: createDBTable
+	}, {
+		text: 'Delete table',
+		tootip: 'Delete the eslected table',
+		icon: '<?php echo $this->get('img')?>table_delete.png',
+		handler: confirmDeleteDBTable
+	}, {
+		text: 'New SQL script',
+		icon: '<?php echo $this->get('img')?>page_white_database.png',
+		handler: editSQLScript
+	}, {
+		text: 'Backup',
+		icon: '<?php echo $this->get('img')?>save_black.png',
+		menu: manageDatabasesBackupMenu
+	}, {
+		text: 'Login',
+		tooltip: 'Login on DB as root user',
+		icon: '<?php echo $this->get('img')?>user.png',
+		handler: editDBRoot
+	}, {
+		text: 'Refresh',
+		icon: '<?php echo $this->get('img')?>reload.png',
+		handler: function() {
+			databasesDataStore.reload();
+			tablesFields = 'none';
+			CMTables = 'none';
+			get_DSCM_DBInfos();
+		}
+	}
+);
+
+var manageDatabases = {
+	id: 'manageDatabases-panel',
+	title: 'EnsKa DB Manager Lite',
+	contentEl: 'manageDatabases-content',
+	autoScroll: true,
+	items: [
+		manageDatabasesToolbar,
+	]
+};
+
+var databasesDataStore = new Ext.data.Store ( {
+		id: 'databases-datastore',
+		proxy: new Ext.data.HttpProxy ( {
+				url:'?act=loadInterface&lt=DatabasesGrid'
+			}
+		),
+		reader: new Ext.data.JsonReader ( {
+				root: 'results',
+				totalProperty: 'total',
+				id: 'id'
+			}, [
+				{name: 'Name', type: 'string', mapping: 'name'},
+				{name: 'Records', type: 'int', mapping: 'records'}
+			]
+		),
+		sortInfo: {
+			field: 'Name',
+			direction: "ASC"
+		}
+	}
+);
+
+var databasesColumnModel = new Ext.grid.ColumnModel ( [ {
+			header: 'Table',
+			dataIndex: 'Name',
+			readOnly: true,
+			width: 800
+		}, {
+			header: 'Records',
+			readOnly: true,
+			dataIndex: 'Records',
+			width: 80
+		}
+	]
+);
+databasesColumnModel.defaultSortable = true;
+
+var databasesListingEditorGrid =  new Ext.grid.GridPanel ( {
+		border: false,
+		id: 'databasesListingEditorGrid',
+		store: databasesDataStore,
+		cm: databasesColumnModel,
+		enableColLock:false,
+		selModel: new Ext.grid.RowSelectionModel ( {
+				singleSelect: true
+			}
+		),
+		autoScroll: true,
+		anchor:'95%'
+	}
+);
+
+var datasTableGridEditorGrid;
+var tablesFields = 'none';
+var CMTables = 'none';
+var	table;
+
+function get_DSCM_DBInfos()
+{
+	conn.request ( {
+			url: '?act=loadInterface&lt=GetTablesColumnsModel',
+			method: 'GET',
+			params: 'data=',
+			success: function(resObj) {
+				tablesFields = resObj.responseText;
+			}
+		}
+	);
+	
+	conn.request ( {
+			url: '?act=loadInterface&lt=GetTablesFields',
+			method: 'GET',
+			params: 'data=',
+			success: function(resObj) {
+				CMTables = resObj.responseText;
+			}
+		}
+	);	
+}
+
+function showTableDatas()
+{
+	if (CMTables == 'none') {
+		get_DSCM_DBInfos();
+		return;
+	}
+	
+	table = databasesListingEditorGrid.selModel.getSelected().json.name;
+	var DS = tablesFields.split(';');
+	var	CM = CMTables.split(';');
+	var tableFields;
+	var CMTable;
+	
+	for (i=0; i<DS.length; i++) {
+		var tabDS = DS[i].split('.');
+		for (j=0; j<tabDS.length; j++) {
+			if(tabDS[j] == table) {
+				tableFields = eval('(' + tabDS[j + 1] + ')');
+			}
+		}
+	}
+	
+	for (i=0; i<CM.length; i++) {
+		var tabCM = CM[i].split('.');
+		for (j=0; j<tabCM.length; j++) {
+			if(tabCM[j] == table) {
+				CMTable = eval('(' + tabCM[j + 1] + ')');
+			}
+		}
+	}
+	
+	var datasTableDataStore = new Ext.data.Store ( {
+			id: 'datas-table-datastore',
+			proxy: new Ext.data.HttpProxy ( {
+					url: '?act=loadInterface&lt=TableDatasGrid&data=' + table
+				}
+			),
+			reader: new Ext.data.JsonReader ( {
+					root: 'results',
+					totalProperty: 'total',
+					id: 'id'
+				}, 
+				CMTable
+			)
+		}
+	);
+	var datasTableGridColumnModel = new Ext.grid.ColumnModel(tableFields);
+	
+	datasTableGridEditorGrid =  new Ext.grid.EditorGridPanel ( {
+			id: 'datasTableGridListingEditorGrid',
+			store: datasTableDataStore,
+			cm: datasTableGridColumnModel,
+			enableColLock:false,
+			bbar: new Ext.PagingToolbar ( {
+					pageSize: 13,
+					store: datasTableDataStore,
+					displayInfo: true
+				}
+			),
+			autoScroll: true,
+			tbar: [ {
+					text: 'Edit',
+					tooltip: 'Edit the selection',
+					icon: '<?php echo $this->get('img')?>table_edit.png',
+					handler: showEditRow
+				},{
+					text: 'Delete',
+					tooltip: 'Delete the selected row',
+					icon: '<?php echo $this->get('img')?>table_delete.png',
+					handler: confirmDeleteRecord
+				}, 
+					'-', {
+					text: 'New field',
+					tooltip: 'Create a new field',
+					icon: '<?php echo $this->get('img')?>table_row_insert.png',
+					handler: createDBField
+				}, {
+					text: 'Delete field',
+					tooltip: 'Delete a table field',
+					icon: '<?php echo $this->get('img')?>table_row_delete.png',
+					handler: showDeleteDDBField
+				}
+			]
+		}
+	);
+	datasTableDataStore.load({params: {start: 0, limit: 13}});
+	
+	var winDatasTableGrid = new Ext.Window ( {
+			closeAction: 'close',
+			layout: "fit",
+			modal: false,
+			resizable: false,
+			maximizable: false,
+			minimizable: false,
+			closable: true,
+			title: "Datas in table " + table,
+			width: 1000,
+			height: 400,
+			border: false,
+			items : [
+				datasTableGridEditorGrid
+			]
+		}
+	);
+	winDatasTableGrid.show();
+	datasTableGridEditorGrid.on('rowdblclick', showEditRow);
+}
+
+function showEditRow()
+{
+	var datas = datasTableGridEditorGrid.getSelectionModel().selection.record.json;
+	var col = datasTableGridEditorGrid.selModel.selection.cell[1];
+	var jst = JSON.stringify(datas);
+	
+	var str = jst;
+	var toreplace = "::";
+	var replaceby = ":-:";
+	while(str.indexOf(toreplace) > -1) {
+		str = str.replace(toreplace,replaceby)
+	}
+	jst = str;
+	
+	var i = 0;
+	var	header;
+	var value;
+	for(var key in datas) {
+		if (i == col) {
+			header = key;
+			value = datas[key]
+		}
+		i++;
+	}
+	
+	var editorRowWizard = {
+		plain: false,
+		height:200,
+		deferredRender: false,
+		id: 'editor-row-form',
+		iconCls:'icon-infos',
+		layout:'form',
+		xtype: 'form',
+		bodyStyle: 'padding-left: 10px; padding-top: 5px;',
+		items: [ {
+				id:'field-to-edit',
+				fieldLabel: header,
+				anchor:'95%',
+				xtype: 'textfield',
+				value: value
+			}
+		],
+		buttons: [ {
+				text: 'Update',
+				id: 'update-editor-row-btn',
+				handler: function() {
+					
+					var key = header;
+					var value = Ext.get('field-to-edit').dom.value;
+					
+					var str = value;
+					var toreplace = "::";
+					var replaceby = ":-:";
+					while(str.indexOf(toreplace) > -1) {
+						str = str.replace(toreplace,replaceby)
+					}
+					value = str;
+					
+					var req = conn.request ( {
+							url: '?act=execPlg&plg=manageDatabases',
+							method: 'POST',
+							params: "data=" + 'updateRecord::' + jst + '::' + key + '::' + value + '::' + table + '::' + rootLogin + '::' + rootPassword,
+							success: function(resObj) {
+								if (resObj.responseText == ' success') {
+									datasTableGridEditorGrid.store.reload({params: {start: 0, limit: 13}});
+									winEditRow.close();
+								}
+								else {
+									msgError(resObj.responseText);
+								}
+							}
+						}
+					);
+				}
+			}, {
+				text: 'Cancel',
+				handler: function() {
+					winEditRow.close();
+				}
+			}
+		]
+	};
+	
+	var winEditRow = new Ext.Window ( {
+			closeAction: 'close',
+			layout: "fit",
+			modal: true,
+			resizable: false,
+			maximizable: false,
+			minimizable: false,
+			closable: true,
+			title: "Data row editor",
+			width: 400,
+			height: 105,
+			border: false,
+			items : [
+				editorRowWizard
+			]
+		}
+	);
+	
+	if (rootLogin == 'none') {
+		editDBRoot();
+	}
+	else {
+		winEditRow.show();
+	}
+}
+
+function confirmDeleteRecord()
+{
+	if (rootLogin == 'none') {
+		editDBRoot();
+	}
+	else {
+		if (datasTableGridEditorGrid.getSelectionModel().selection.record.json) {
+			Ext.MessageBox.confirm('EnsKa Core Manager','Are you sure you want to delete the selected record ?', deleteRecord);
+		}
+		else 
+		{
+			Ext.MessageBox.alert('EnsKa Core Manager','You must select a row!');
+		}
+	}
+}
+
+function deleteRecord(btn)
+{
+	var datas = datasTableGridEditorGrid.getSelectionModel().selection.record.json;
+	var col = datasTableGridEditorGrid.selModel.selection.cell[1];
+	var jst = JSON.stringify(datas);
+	
+	var str = jst;
+	var toreplace = "::";
+	var replaceby = ":-:";
+	while(str.indexOf(toreplace) > -1) {
+		str = str.replace(toreplace,replaceby)
+	}
+	jst = str;
+	
+	var i = 0;
+	var	header;
+	var value;
+	for(var key in datas) {
+		if (i == col) {
+			header = key;
+			value = datas[key]
+		}
+		i++;
+	}
+	
+	if(btn == 'yes') {
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=manageDatabases',
+				method: 'POST',
+				params: "data=" + 'deleteRecord::' + jst + '::' + key + '::' + value + '::' + table + '::' + rootLogin + '::' + rootPassword,
+				success: function(resObj) {
+					if (resObj.responseText == ' success') {
+						datasTableGridEditorGrid.store.reload({params: {start: 0, limit: 13}});
+						databasesDataStore.reload();
+						tablesFields = 'none';
+						CMTables = 'none';
+						get_DSCM_DBInfos();
+					}
+					else {
+						msgError(resObj.responseText);
+					}
+				}
+			}
+		);
+	}
+}
+
+function createDBField()
+{
+	var fType = 'none';
+	
+	var fTypes = [
+		['TINYINT', 'Tiny integer'],
+		['INTEGER', 'Integer'],
+		['FLOAT', 'Float'],
+		['DOUBLE', 'Double'],
+		['DATE', 'Date'],
+		['DATETIME', 'Date time'],
+		['CHAR', 'Char'],
+		['VARCHAR', 'Varchar'],
+		['BLOB', 'Blob'],
+		['LONGBLOB', 'Long blob'],
+		['TEXT', 'Text'],
+		['LONGTEXT', 'Long text'],
+		['ENUM', 'Enum'],
+		['BINARY', 'Binary'],
+		['BIT', 'Bit'],
+		['BOOLEAN', 'Boolean']
+	];
+	
+	var fieldTypesDataStore = new Ext.data.ArrayStore ( {
+			fields: ['key','value'],
+			data : fTypes
+		}
+	);
+	
+	var newDBFieldWizard =  {
+		plain: false,
+		height:235,
+		deferredRender: false,
+		id: 'new-dbase-field-form',
+		iconCls:'icon-infos',
+		layout:'form',
+		xtype: 'form',
+		bodyStyle: 'padding-left: 10px; padding-top: 10px;',
+		items: [ {
+				id:'new-dbase-field-name',
+				fieldLabel: 'Field name',
+				anchor:'95%',
+				xtype: 'textfield',
+				minLength: 1,
+				maxLength: 100,
+				minLengthText: 'Field\'s name must be at least 1 characters long.',
+				maxLengthText: 'Field\'s name must not be bigger than 100 characters long.',
+				blankText: 'You must give a field\'s name',
+				allowBlank:false
+			}, {
+				id: 'new-dbase-field-type',
+				fieldLabel: 'Type',
+				xtype: 'combo',
+				name: 'comboSelectFieldType',
+				loadingText: 'Loading types...',
+				typeAhead: true,
+				hideTrigger: false,
+				triggerAction: 'all',
+				mode: 'local',
+				emptyText: 'Select a field type...',
+				anchor:'95%',
+				displayField: 'value',
+				valueField: 'key',
+				store: fieldTypesDataStore,
+				minChars: 3,
+				selectOnFocus: true,
+				forceSelection: true,
+				onSelect: function (item) {
+					Ext.getCmp('new-dbase-field-type').collapse();
+					Ext.getCmp('new-dbase-field-type').setValue(item.data.value);
+					fType = item.data.key;
+				}
+			}, {
+				id:'new-dbase-field-size',
+				fieldLabel: 'Size',
+				width: 50,
+				xtype: 'textfield',
+				allowBlank:true
+			}, {
+				xtype: 'checkboxgroup',
+				fieldLabel: 'Options',
+				columns: 2,
+				vertical: true,
+				items: [
+					{boxLabel: 'Not null', id: 'new-dbase-field-notnull'},
+					{boxLabel: 'Unsigned', id: 'new-dbase-field-unsigned'},
+					{boxLabel: 'Auto-increment', id: 'new-dbase-field-auto'},
+					{boxLabel: 'Unique', id: 'new-dbase-field-unique'},
+					{boxLabel: 'Primary', id: 'new-dbase-field-primary'}
+				]
+			}, {
+				id:'new-dbase-field-default',
+				fieldLabel: 'Default',
+				anchor:'95%',
+				xtype: 'textfield',
+				allowBlank:true
+			},
+		],
+		buttons: [ {
+				text: 'Create',
+				id: 'new-dbase-field-save-btn',
+				handler: function() {
+					var name = Ext.get('new-dbase-field-name').dom.value;
+					var defaut = Ext.get('new-dbase-field-default').dom.value;
+					var size = Ext.get('new-dbase-field-size').dom.value;
+					
+					if (name == '') {
+						msgError('You must give a field name!');
+					}
+					else {
+						if (fType == 'none') {
+							msgError('You must select a data type!');
+						}
+						else {
+							var notnull = '2';
+							if (Ext.get('new-dbase-field-notnull').dom.checked){
+								notnull = '1';
+							}
+							
+							var unsigned = '2';
+							if (Ext.get('new-dbase-field-unsigned').dom.checked){
+								unsigned = '1';
+							}
+							
+							var auto = '2';
+							if (Ext.get('new-dbase-field-auto').dom.checked){
+								auto = '1';
+							}
+							
+							var unique = '2';
+							if (Ext.get('new-dbase-field-unique').dom.checked){
+								unique = '1';
+							}
+							
+							var primary = '2';
+							if (Ext.get('new-dbase-field-primary').dom.checked){
+								primary = '1';
+							}
+							
+							var req = conn.request ( {
+									url: '?act=execPlg&plg=manageDatabases',
+									method: 'POST',
+									params: "data=" + 'createField::' + table + '::' + name + '::' + fType + '::' + notnull + '::' + unsigned + '::' + auto + '::' + unique + '::' + primary + '::' + size + '::' + defaut + '::' + rootLogin + '::' + rootPassword,
+									success: function(resObj) {
+										if (resObj.responseText == ' success') {
+											databasesDataStore.reload();
+											tablesFields = 'none';
+											CMTables = 'none';
+											get_DSCM_DBInfos();
+											winNewDBField.close();
+										}
+										else {
+											msgError(resObj.responseText);
+										}
+									}
+								}
+							);
+						}
+					}
+				}
+			},
+			{
+				text: 'Cancel',
+				handler: function() {
+					winNewDBField.close();
+				}
+			}
+		]
+	};
+
+	var winNewDBField = new Ext.Window ( {
+			closeAction: 'close',
+			layout: "fit",
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: "Create a new field",
+			width: 400,
+			height: 270,
+			border: false,
+			items:  [
+				newDBFieldWizard
+			]
+		}
+	);
+	
+	if (rootLogin == 'none') {
+		editDBRoot();
+	}
+	else {
+		winNewDBField.show();
+	}
+}
+
+function showDeleteDDBField()
+{
+	var sField;
+	
+	var dbFieldsDataStore = new Ext.data.JsonStore ( {
+			autoDestroy: true,
+			url: '?act=loadInterface&lt=DBFields&data=' + table,
+			root: 'items',
+			idProperty: 'key',
+			fields: ['key', 'value']
+		}
+	);
+
+	var deleteDBFieldsWizard =  {
+		plain: false,
+		height:235,
+		deferredRender: false,
+		id: 'delete-dbase-field-form',
+		iconCls:'icon-infos',
+		layout:'form',
+		xtype: 'form',
+		bodyStyle: 'padding-left: 10px; padding-top: 10px;',
+		items: [ {
+				xtype: 'combo',
+				fieldLabel: 'Field',
+				id: 'combo-select-dbFields',
+				name: 'comboSelectDDBFields',
+				loadingText: 'Loading...',
+				typeAhead: true,
+				hideTrigger: false,
+				triggerAction: 'all',
+				mode: 'remote',
+				emptyText: 'Select a field...',
+				width: 200,
+				displayField: 'key',
+				valueField: 'value',
+				store: dbFieldsDataStore,
+				minChars: 1,
+				onSelect: function (item) {
+					Ext.getCmp('combo-select-dbFields').collapse();
+					Ext.getCmp('combo-select-dbFields').setValue(item.data.value);
+					sField = item.data.key;
+				}
+			}
+		],
+		buttons: [ {
+				text: 'Delete',
+				id: 'delete-dbase-btn',
+				handler: function() {
+					var req = conn.request ( {
+							url: '?act=execPlg&plg=manageDatabases',
+							method: 'POST',
+							params: "data=" + 'deleteField::' + table + '::' + sField + '::' + rootLogin + '::' + rootPassword,
+							success: function(resObj) {
+								if (resObj.responseText == ' success') {	
+									databasesDataStore.reload();
+									tablesFields = 'none';
+									CMTables = 'none';
+									get_DSCM_DBInfos();
+									winDeleteDBFields.close();
+								}
+								else {
+									msgError(resObj.responseText);
+								}
+							}
+						}
+					);
+				}
+			},
+			{
+				text: 'Cancel',
+				handler: function() {
+					winDeleteDBFields.close();
+				}
+			}
+		]
+	};
+	
+	var winDeleteDBFields = new Ext.Window ( {
+			closeAction: 'close',
+			layout: "fit",
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: "Select a field to delete",
+			width: 370,
+			height: 112,
+			border: false,
+			items:  [
+				deleteDBFieldsWizard
+			]
+		}
+	);
+	
+	if (rootLogin == 'none') {
+		editDBRoot();
+	}
+	else {
+		winDeleteDBFields.show();
+	}
+}
+
+function createDBTable()
+{
+	var fType = 'none';
+	
+	var fTypes = [
+		['TINYINT', 'Tiny integer'],
+		['INTEGER', 'Integer'],
+		['FLOAT', 'Float'],
+		['DOUBLE', 'Double'],
+		['DATE', 'Date'],
+		['DATETIME', 'Date time'],
+		['CHAR', 'Char'],
+		['VARCHAR', 'Varchar'],
+		['BLOB', 'Blob'],
+		['LONGBLOB', 'Long blob'],
+		['TEXT', 'Text'],
+		['LONGTEXT', 'Long text'],
+		['ENUM', 'Enum'],
+		['BINARY', 'Binary'],
+		['BIT', 'Bit'],
+		['BOOLEAN', 'Boolean']
+	];
+	
+	var fieldTypesDataStore = new Ext.data.ArrayStore ( {
+			fields: ['key','value'],
+			data : fTypes
+		}
+	);
+	
+	var createDBTableWizard =  {
+		plain: false,
+		height:235,
+		deferredRender: false,
+		id: 'new-dbTable-field-form',
+		iconCls:'icon-infos',
+		layout:'form',
+		xtype: 'form',
+		bodyStyle: 'padding-left: 10px; padding-top: 10px;',
+		items: [ {
+				id:'new-dbTable-table-name',
+				fieldLabel: 'Table name',
+				anchor:'95%',
+				xtype: 'textfield',
+				minLength: 3,
+				maxLength: 100,
+				minLengthText: 'Table\'s name must be at least 3 characters long.',
+				maxLengthText: 'Table\'s name must not be bigger than 100 characters long.',
+				blankText: 'You must give a table\'s name',
+				allowBlank:false
+			}, {
+				id:'new-dbTable-field-name',
+				fieldLabel: 'First field name',
+				anchor:'95%',
+				xtype: 'textfield',
+				minLength: 1,
+				maxLength: 100,
+				minLengthText: 'Field\'s name must be at least 1 characters long.',
+				maxLengthText: 'Field\'s name must not be bigger than 100 characters long.',
+				blankText: 'You must give a field\'s name',
+				allowBlank:false
+			}, {
+				id: 'new-dbTable-field-type',
+				fieldLabel: 'Type',
+				xtype: 'combo',
+				name: 'comboSelectFieldType',
+				loadingText: 'Loading types...',
+				typeAhead: true,
+				hideTrigger: false,
+				triggerAction: 'all',
+				mode: 'local',
+				emptyText: 'Select a field type...',
+				anchor:'95%',
+				displayField: 'value',
+				valueField: 'key',
+				store: fieldTypesDataStore,
+				minChars: 3,
+				selectOnFocus: true,
+				forceSelection: true,
+				onSelect: function (item) {
+					Ext.getCmp('new-dbTable-field-type').collapse();
+					Ext.getCmp('new-dbTable-field-type').setValue(item.data.value);
+					fType = item.data.key;
+				}
+			}, {
+				id:'new-dbTable-field-size',
+				fieldLabel: 'Size',
+				width: 50,
+				xtype: 'textfield',
+				allowBlank:true
+			}, {
+				xtype: 'checkboxgroup',
+				fieldLabel: 'Options',
+				columns: 2,
+				vertical: true,
+				items: [
+					{boxLabel: 'Not null', id: 'new-dbTable-field-notnull', checked: true},
+					{boxLabel: 'Unsigned', id: 'new-dbTable-field-unsigned'},
+					{boxLabel: 'Auto-increment', id: 'new-dbTable-field-auto', checked: true},
+					{boxLabel: 'Unique', id: 'new-dbTable-field-unique'},
+					{boxLabel: 'Primary', id: 'new-dbTable-field-primary', checked: true}
+				]
+			}, {
+				id:'new-dbTable-field-default',
+				fieldLabel: 'Default',
+				anchor:'95%',
+				xtype: 'textfield',
+				allowBlank:true
+			},
+		],
+		buttons: [ {
+				text: 'Create',
+				id: 'new-dbTable-field-save-btn',
+				handler: function() {
+				
+					var tableName = Ext.get('new-dbTable-table-name').dom.value;
+					var name = Ext.get('new-dbTable-field-name').dom.value;
+					var defaut = Ext.get('new-dbTable-field-default').dom.value;
+					var size = Ext.get('new-dbTable-field-size').dom.value;
+				
+					if (tableName == '') {
+						msgError('You must give a table name!');
+					}
+					else {
+						if (name == '') {
+							msgError('You must give a field name!');
+						}
+						else {
+							if (fType == 'none') {
+								msgError('You must select a data type!');
+							}
+							else {
+								var notnull = '2';
+								if (Ext.get('new-dbTable-field-notnull').dom.checked){
+									notnull = '1';
+								}
+								
+								var unsigned = '2';
+								if (Ext.get('new-dbTable-field-unsigned').dom.checked){
+									unsigned = '1';
+								}
+								
+								var auto = '2';
+								if (Ext.get('new-dbTable-field-auto').dom.checked){
+									auto = '1';
+								}
+								
+								var unique = '2';
+								if (Ext.get('new-dbTable-field-unique').dom.checked){
+									unique = '1';
+								}
+								
+								var primary = '2';
+								if (Ext.get('new-dbTable-field-primary').dom.checked){
+									primary = '1';
+								}
+								
+								var req = conn.request ( {
+										url: '?act=execPlg&plg=manageDatabases',
+										method: 'POST',
+										params: "data=" + 'createTable::' + tableName + '::' + name + '::' + fType + '::' + notnull + '::' + unsigned + '::' + auto + '::' + unique + '::' + primary + '::' + size + '::' + defaut + '::' + rootLogin + '::' + rootPassword,
+										success: function(resObj) {
+											if (resObj.responseText == ' success') {
+												databasesDataStore.reload();
+												tablesFields = 'none';
+												CMTables = 'none';
+												get_DSCM_DBInfos();
+												winCreateDBTable.close();
+											}
+											else {
+												msgError(resObj.responseText);
+											}
+										}
+									}
+								);
+							}
+						}
+					}
+				}
+			},
+			{
+				text: 'Cancel',
+				handler: function() {
+					winCreateDBTable.close();
+				}
+			}
+		]
+	};
+	
+	var winCreateDBTable = new Ext.Window ( {
+			closeAction: 'close',
+			layout: "fit",
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: "Create a new table",
+			width: 400,
+			height: 300,
+			border: false,
+			items:  [
+				createDBTableWizard
+			]
+		}
+	);
+	
+	if (rootLogin == 'none') {
+		editDBRoot();
+	}
+	else {
+		winCreateDBTable.show();
+	}
+}
+
+function confirmDeleteDBTable()
+{
+	if (rootLogin == 'none') {
+		editDBRoot();
+	}
+	else {
+		if (databasesListingEditorGrid.selModel.getCount() == 1) {
+			Ext.MessageBox.confirm('EnsKa Core Manager','Some websites and applications have risk to don\'t work correctly any more!<br>All datas will be delete!<br>Are you sure you want to delete the table ' + databasesListingEditorGrid.selModel.getSelected().json.name + ' ?', deleteDBTable);
+		}
+		else 
+		{
+			Ext.MessageBox.alert('EnsKa Core Manager','You must select a table!');
+		}
+	}
+}
+
+function deleteDBTable(btn)
+{
+	if(btn == 'yes') {
+		var toDelete = databasesListingEditorGrid.selModel.getSelected().json.name;
+		
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=manageDatabases',
+				method: 'POST',
+				params: "data=" + 'deleteTable::' + toDelete + '::' + rootLogin + '::' + rootPassword,
+				success: function(resObj) {
+					if (resObj.responseText == ' success') {
+						databasesDataStore.reload();
+						tablesFields = 'none';
+						CMTables = 'none';
+						get_DSCM_DBInfos();
+					}
+					else {
+						msgError(resObj.responseText);
+					}
+				}
+			}
+		);
+		
+	} 
+}
+
+function editDBRoot()
+{
+	var editDBRootWizard = {
+		plain: false,
+		height:235,
+		deferredRender: false,
+		id: 'new-user-informations-form',
+		iconCls:'icon-infos',
+		layout:'form',
+		xtype: 'form',
+		html: '<div style="padding: 5px; background: white; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -100px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>root_b.png" width=128 height=128></div>',
+		defaults: {width: 230},
+		bodyStyle: 'padding-left: 230px; padding-top: 60px;',
+		items: [ {
+				id:'editDBRoot-login',
+				fieldLabel: 'Login',
+				anchor:'95%',
+				xtype: 'textfield',
+				minLength: 3,
+				maxLength: 50,
+				minLengthText: 'Root\'s login must be at least 3 characters long.',
+				maxLengthText: 'Root\'s login must not be bigger than 50 characters long.',
+				blankText: 'You must give a Root\'s login',
+				allowBlank:false
+			}, {
+				id:'editDBRoot-password',
+				fieldLabel: 'Password',
+				inputType: 'password',
+				anchor:'95%',
+				xtype: 'textfield',
+				minLength: 3,
+				maxLength: 50,
+				minLengthText: 'Root\'s password must be at least 3 characters long.',
+				maxLengthText: 'Root\'s password must not be bigger than 50 characters long.',
+				blankText: 'You must give a Root\'s password',
+				allowBlank:false
+			}
+		],
+		buttons: [ {
+				text: 'Save',
+				id: 'editDBRoot-save-btn',
+				handler: function() {
+					rootLogin = Ext.get('editDBRoot-login').dom.value;
+					rootPassword = Ext.get('editDBRoot-password').dom.value;
+					showEditDBRoot.close();
+				}
+			}, {
+				text: 'Cancel',
+				handler: function() {
+					showEditDBRoot.close();
+				}
+			}
+		]
+	};
+	
+	var showEditDBRoot = new Ext.Window ( {
+			closeAction: 'close',
+			layout: "fit",
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: "Root login",
+			width: 625,
+			height: 230,
+			border: false,
+			items:  [
+				editDBRootWizard
+			]
+		}
+	);
+	showEditDBRoot.show();
+}
+
+function editSQLScript()
+{
+	var scriptContentEditor = new Ext.form.TextArea ( {
+			id:'SQLScript-content-editor',
+			wrap:'off',
+			anchor:'95%'
+		}
+	);
+	
+	var showEditSQLScript = new Ext.Window ( {
+			closeAction: 'close',
+			layout: "fit",
+			modal: false,
+			resizable: true,
+			maximizable: true,
+			closable: true,
+			title: "New SQL Script",
+			width: 625,
+			height: 230,
+			border: false,
+			items:  [
+				scriptContentEditor
+			],
+			buttons: [ {
+					text: 'Execute',
+					id: 'SQLScript-execute-btn',
+					handler: function() {
+						var request = Ext.get('SQLScript-content-editor').dom.value;
+						var req = conn.request ( {
+								url: '?act=execPlg&plg=manageDatabases',
+								method: 'POST',
+								params: "data=" + 'scriptRequest::' + rootLogin + '::' + rootPassword + '&script=' + request,
+								success: function(resObj) {
+									Ext.get('SQLScript-content-editor').dom.value = resObj.responseText;
+									databasesDataStore.reload();
+									tablesFields = 'none';
+									CMTables = 'none';
+									get_DSCM_DBInfos();
+								}
+							}
+						);
+					}
+				}, {
+					text: 'Close',
+					handler: function() {
+						showEditSQLScript.close();
+					}
+				}
+			]
+		}
+	);
+	
+	if (rootLogin == 'none') {
+		editDBRoot();
+	}
+	else {
+		showEditSQLScript.show();
+	}
+}
+
+function showExportDBOptions()
+{
+	var sTable = 'none';
+	
+	var dbTablesDataStore = new Ext.data.JsonStore ( {
+			autoDestroy: true,
+			url: '?act=loadInterface&lt=DBTables',
+			root: 'items',
+			idProperty: 'key',
+			fields: ['key', 'value']
+		}
+	);
+	
+	var exportDBWizard = {
+		xtype:'tabpanel',
+		plain: false,
+		activeTab: 0,
+		height:200,
+		deferredRender: false,
+		defaults:{bodyStyle:'padding:0px'},
+		items: [ {
+				title:'Export information',
+				iconCls:'icon-infos',
+				layout:'form',
+				xtype: 'form',
+				html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -120px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>export_b.png" width=128 height=128></div>',
+				defaults: {width: 230},
+				bodyStyle: 'padding-left: 230px; padding-top: 30px;',
+				items: [ {
+						xtype: 'checkbox',
+						id:'is-all-db',
+						fieldLabel: 'Export all tables',
+						anchor:'95%'
+					}, {
+						xtype: 'checkbox',
+						id:'is-drop-db',
+						fieldLabel: 'Add DROP',
+						anchor:'95%'
+					}, {
+						xtype: 'combo',
+						fieldLabel: 'Table',
+						id: 'combo-select-dbTables',
+						name: 'comboSelectDDBTables',
+						loadingText: 'Loading...',
+						typeAhead: true,
+						hideTrigger: false,
+						triggerAction: 'all',
+						mode: 'remote',
+						emptyText: 'Select a table...',
+						width: 200,
+						displayField: 'key',
+						valueField: 'value',
+						store: dbTablesDataStore,
+						minChars: 1,
+						onSelect: function (item) {
+							Ext.getCmp('combo-select-dbTables').collapse();
+							Ext.getCmp('combo-select-dbTables').setValue(item.data.value);
+							sTable = item.data.key;
+						} 
+					}, {
+						id:'export-tables-custom',
+						fieldLabel: 'Custom',
+						anchor:'95%',
+						xtype: 'textfield'
+					}
+				]
+			}
+		],
+		buttons: [ {
+				text: 'Export',
+				handler: function() {
+					
+					var sTables = 'none';
+					if (Ext.get('export-tables-custom').dom.value != '') {
+						sTables = Ext.get('export-tables-custom').dom.value;
+					}
+					
+					var all = 2;
+					if (Ext.get('is-all-db').dom.checked) {
+						var all = 1;
+					}
+					
+					var drop = 2
+					if (Ext.get('is-drop-db').dom.checked) {
+						var drop = 1;
+					}
+					
+					msgWait('EnsKa Core is exporting datas...');
+					var req = conn.request ( {
+							url: '?act=execPlg&plg=manageDatabases',
+							method: 'POST',
+							params: "data=" + 'export::' + all + '::' + sTable + '::' + sTables + '::' + drop + '::' + rootLogin + '::' + rootPassword,
+							success: function(resObj) {
+								if (resObj.responseText == ' success') {
+									msgOk('The datas has been exported !');
+									winExportDBOptions.close();
+								}
+								else {
+									msgError(resObj.responseText);
+								}
+							}
+						}
+					);
+				}
+			},
+			{
+				text: 'Cancel',
+				handler: function() {
+					winExportDBOptions.close();
+				}
+			}
+		]
+	};
+	
+	winExportDBOptions = new Ext.Window ( {
+			closeAction: 'close',
+			layout: "fit",
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: 'Export database',
+			width: 600,
+			height: 250,
+			border: false,
+			items: [
+				exportDBWizard
+			]
+		}
+	);
+	
+	if (rootLogin == 'none') {
+		editDBRoot();
+	}
+	else {
+		winExportDBOptions.show();
+	}
+}
+
+function uploadSQLScript()
+{
+	var uploadSQLScriptWizard = new Ext.FormPanel ( {
+			fileUpload: true,
+			width: 400,
+			frame: true,
+			autoHeight: true,
+			bodyStyle: 'padding: 10px 10px 0 10px;',
+			labelWidth: 150,
+			defaults: {
+				anchor: '95%',
+				allowBlank: false,
+				msgTarget: 'side'
+			},
+			items: [ {
+					xtype: 'fileuploadfield',
+					id: 'form-file-SQLScript',
+					emptyText: 'Select a SQL script...',
+					fieldLabel: 'Script file',
+					name: 'file-sqlscript',
+					buttonText: '...',
+					buttonCfg: {
+						iconCls: 'icon-browse'
+					}
+				}
+			],
+			buttons: [ {
+					text: 'Upload',
+					handler: function() {
+						if(uploadSQLScriptWizard.getForm().isValid()) {
+							uploadSQLScriptWizard.getForm().submit ( {
+									url: '?act=execPlg&plg=manageDatabases',
+									method: 'POST',
+									params: "data=" + 'importScript::' + rootLogin + '::' + rootPassword,
+									waitMsg: 'EnsKa Core is dumping the SQL script...',
+									success: function(uploadSQLScriptWizard, o) {
+										obj = Ext.util.JSON.decode(o.response.responseText);
+										tabMsg = obj.msg.msgInfo.split(';');
+										if (tabMsg[0] != 'err') {
+											databasesDataStore.reload();
+											tablesFields = 'none';
+											CMTables = 'none';
+											get_DSCM_DBInfos();
+											winuploadSQLScript.close();
+											msgOk(tabMsg[0]);
+										}
+										else {
+											msgError(tabMsg[1]);
+										}
+									}
+								}
+							);
+						}
+					}
+				}
+			]
+		}
+	);
+	
+	var winuploadSQLScript = new Ext.Window ( {
+			closeAction: 'close',
+			layout: 'fit',
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: 'Import a SQL script',
+			width: 600,
+			height: 110,
+			border: false,
+			items: [
+				uploadSQLScriptWizard
+			]
+		}
+	);
+	
+	if (rootLogin == 'none') {
+		editDBRoot();
+	}
+	else {
+		winuploadSQLScript.show();
+	}
+}
+
+databasesDataStore.load();
+databasesListingEditorGrid.render('databasesGridRender');
+databasesListingEditorGrid.on('rowdblclick', showTableDatas);

@@ -1,0 +1,341 @@
+var ruleId;
+var aRuleId;
+var	ruleName;
+var count_aff_ruleEditor = 0;
+var conn = new Ext.data.Connection();
+var manageRulesToolbar = new Ext.Toolbar();
+
+var rulesDataStore = new Ext.data.JsonStore ( {
+		autoDestroy: true,
+		url: '?act=loadInterface&lt=rulesData',
+		root: 'items',
+		idProperty: 'id',
+		fields: ['id', 'name', 'description']
+	}
+);
+
+manageRulesToolbar.add
+( {
+		text:'Save',
+		tooltip: 'Save modifications',
+		icon: '<?php echo $this->get('img')?>save.png',
+		handler: function() {
+			var ruleName = Ext.get('manage-ruleName').dom.value;
+			var	ruleDescription = Ext.get('manage-ruleDescription').dom.value;
+			
+			var req = conn.request ( {
+					url: '?act=execPlg&plg=manageRules',
+					method: 'POST',
+					params: "data=" + 'edit::' + ruleName + '::' + ruleDescription + '::' + ruleId,
+					success: function(resObj) {
+						if (resObj.responseText != "success") {
+							msgError(resObj.responseText);
+						}
+					}
+				}
+			);
+		}
+	}, {
+			text: 'Delete',
+			tooltip: 'Delete the selected rule',
+			icon: '<?php echo $this->get('img')?>cross.png',
+			handler: confirmDeleteRule
+	},
+		'-', {
+		text: 'Rules :'
+	}, {
+		xtype: 'combo',
+		id: 'combo-select-rule',
+		name: 'comboSelectRule',
+		loadingText: 'Loading...',
+		typeAhead: true,
+		hideTrigger: false,
+		triggerAction: 'all',
+		mode: 'remote',
+		emptyText: '     Select a rule...',
+		width: 200,
+		displayField: 'name',
+		valueField: 'id',
+		store: rulesDataStore,
+		minChars: 1,
+		onSelect: function (item) {
+			Ext.getCmp('combo-select-rule').collapse();
+			
+			var getRulesArray = conn.request ( {
+					url: '?act=loadInterface&lt=GetSelectedRuleInfos',
+					method: 'GET',
+					params: "data=" + item.id,
+					success: function(resObj) {
+						try {
+							ruleStore = Ext.util.JSON.decode(resObj.responseText);
+							Ext.getCmp('combo-select-rule').setValue('      ' + ruleStore.name);
+							
+							Ext.get('manage-ruleName').dom.value = ruleStore.name;
+							Ext.get('manage-ruleDescription').dom.value = ruleStore.description;
+							
+							var manageTreeRulesLoader = '?act=loadInterface&lt=TreeRulesParams&data=' + item.data.id;
+							ruleId = item.data.id;
+							ruleName = item.data.name
+							Ext.getCmp('manage-tree-rules').loader.dataUrl = manageTreeRulesLoader;
+							Ext.getCmp('manage-tree-rules').root.reload();
+							manageTreeRules.getRootNode().expand();
+						}
+						catch (err) {
+							Ext.getCmp('combo-select-rule').setValue('      ' + resObj.responseText);
+							Ext.getCmp('manage-rule-wizard').activate('manage-rule-informations-form');
+							Ext.get('manage-ruleName').dom.value = resObj.responseText;
+							Ext.get('manage-ruleDescription').dom.value = resObj.responseText;
+							delete ruleStore;
+						}
+						
+					}
+				}
+			);
+			if (count_aff_ruleEditor == 0) {
+				Ext.getCmp('manage-rule-wizard').activate('manage-rule-informations-form');
+				count_aff_ruleEditor++;
+			}
+		}
+	}
+);
+
+var manageRules = {
+	id: 'manageRules-panel',
+	title: 'EnsKa Core Manager - Manage rules',
+	contentEl: 'manageRules-content',
+	autoScroll: true,
+	items: [
+		manageRulesToolbar
+	]
+};
+
+var availableRules = new Ext.form.ComboBox ( {
+        id: 'combo-select-availablerule',
+		name: 'comboSelectAvailableRules',
+		fieldLabel: 'Rule name',
+		loadingText: 'Loading...',
+		typeAhead: true,
+		hideTrigger: false,
+		triggerAction: 'all',
+		mode: 'remote',
+		emptyText: '     Select a rule...',
+		width: 200,
+		anchor: '95%',
+		displayField: 'name',
+		valueField: 'id',
+		store: rulesDataStore,
+		minChars: 3,
+		onSelect: function (item) {
+			Ext.getCmp('combo-select-availablerule').collapse();
+			aRuleId = item.data.id;
+			Ext.getCmp('combo-select-availablerule').setValue('      ' + item.data.name);
+		}
+    }
+);
+
+var manageTreeRules = new Ext.tree.TreePanel ( {
+		title: 'Rules',
+		fieldLabel: 'Rules',
+		id:'manage-tree-rules',
+		iconCls:'icon-rules',
+		border:true,
+		height: 200,
+		width: 600,
+		anchor: '95%',
+		xtype: 'treepanel',
+		autoScroll: true,
+		rootVisible: true,
+		lines: true,
+		singleExpand: false,
+		useArrows: true,
+		animate: true,
+		dataUrl:'?act=loadInterface&lt=TreeRulesParams',
+		contextMenu: new Ext.menu.Menu({
+		items: [ {
+				id: 'delete-node',
+				text: 'Remove',
+				icon: '<?php echo $this->get('img')?>cross.png'
+			}
+		],
+		listeners:  {
+			itemclick: function(item)  {
+				switch (item.id)  {
+					case 'delete-node':
+						var opt = item.parentMenu.contextNode.id;
+						var nodeOpt = item.parentMenu.contextNode;
+						Ext.Msg.show ( {
+								title:'EnsKa Core Manager',
+								msg: 'Are you sure to remove the selected rule ?',
+								buttons: Ext.Msg.YESNO,
+								fn: function (btn) {
+									if (btn == 'yes') {
+										var req = conn.request
+										( {
+												url: '?act=execPlg&plg=manageRules',
+												method: 'POST',
+												params: "data=" + 'deleteField::' + ruleId + '::' +opt,
+												success: function(resObj) {
+													if (resObj.responseText == "success") {
+														Ext.getCmp('manage-tree-rules').root.reload();
+													}
+													else {
+														msgError(resObj.responseText);
+													}
+												}
+											}
+										);
+									}
+							   },
+							   animEl: 'elId',
+							   icon: Ext.MessageBox.QUESTION
+							}
+						);
+					break;
+				}
+			}
+		}
+	}
+),
+		listeners: {
+			contextmenu: function(node, e) {
+				node.select();
+				var c = node.getOwnerTree().contextMenu;
+				c.contextNode = node;
+				c.showAt(e.getXY());
+			}
+		},
+		root: {
+			nodeType: 'async',
+			draggable:false,
+			text: 'Parameters',
+			id:'node-root'
+		}
+	}
+);
+
+var manageRuleWizard = 
+{
+	xtype:'tabpanel',
+	id: 'manage-rule-wizard',
+	plain: false,
+	border: false,
+	height: 500,
+	deferredRender: false,
+	defaults:{bodyStyle:'padding:0px'},
+	contentEl: 'manageRuleEditStart',
+	items: [ {
+			title:'Basics informations',
+			id: 'manage-rule-informations-form',
+			iconCls:'icon-infos',
+			layout:'form',
+			xtype: 'form',
+			html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -370px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>rules_b2.png" width=128 height=128></div>',
+			defaults: {width: 230},
+			bodyStyle: 'padding-left: 230px; padding-top: 50px;',
+			items: [ {
+					id:'manage-ruleName',
+					fieldLabel: 'Rule name',
+					anchor:'95%',
+					xtype: 'textfield',
+					minLength: 3,
+					maxLength: 20,
+					minLengthText: 'Display name must be at least 3 characters long.',
+					maxLengthText: 'Display name must not be bigger than 20 characters long.',
+					blankText: 'You must give a Rule name',
+					allowBlank:false
+				},
+				new Ext.form.TextArea ( {
+						id:'manage-ruleDescription',
+						wrap:'on',
+						anchor:'95%',
+						fieldLabel: 'Description',
+					}
+				),
+				manageTreeRules
+			]
+		}
+	]
+};
+
+var wEditor = new Ext.Panel ( {
+		id: 'ruleEditor',
+		height: 500,
+		border: false,
+		items: [
+			manageRuleWizard
+		]
+	}
+);
+
+function confirmDeleteRule()
+{
+	try {
+		Ext.MessageBox.confirm('EnsKa Core Manager','Are you sure you want to delete ' + ruleName + ' ?', deleteRule);
+	}
+	catch(err) {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select a rule!');
+	}
+}
+
+function deleteRule(btn)
+{
+	if(btn == 'yes') {
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=manageRules',
+				method: 'POST',
+				params: "data=" + 'delete::' + ruleId,
+				success: function(resObj) {
+					if (resObj.responseText == "success") {
+						Ext.get('manage-ruleName').dom.value = '';
+						Ext.get('manage-ruleDescription').dom.value = '';
+						Ext.getCmp('combo-select-rule').setValue('');
+						ruleId = '';
+						ruleName = '';
+					}
+					else {
+						msgError(resObj.responseText);
+					}
+				}
+			}
+		);
+	} 
+}
+
+function addNewParamRule()
+{
+	var ruleToAdd = Ext.getCmp('combo-select-availablerule').value;
+	var fieldName = Ext.get('u-field').dom.value;
+	var fieldExp = Ext.get('u-exp').dom.value;
+	var fieldFnct = Ext.get('u-fnct').dom.value;
+	
+	var req = conn.request ( {
+			url: '?act=execPlg&plg=manageRules',
+			method: 'POST',
+			params: "data=" + 'addRuleParameter::' + aRuleId + '::' + fieldName + '::' + fieldExp + '::' + fieldFnct,
+			success: function(resObj) {
+				if (resObj.responseText == "success") {
+					Ext.get('u-field').dom.value = '';
+					Ext.get('u-exp').dom.value = '';
+					Ext.get('u-fnct').dom.value = '';
+					Ext.getCmp('combo-select-availablerule').setValue('');
+					
+					if (aRuleId == ruleId) {
+						var manageTreeRulesLoader = '?act=loadInterface&lt=TreeRulesParams&data=' + ruleId;
+						Ext.getCmp('manage-tree-rules').loader.dataUrl = manageTreeRulesLoader;
+						Ext.getCmp('manage-tree-rules').root.reload();
+						manageTreeRules.getRootNode().expand();
+					}
+					aRuleId = '';
+				}
+				else {
+					msgError(resObj.responseText);
+				}
+			}
+		}
+	);
+}
+
+wEditor.render('ruleEditorRender');
+manageTreeRules.getRootNode().expand();
+availableRules.render('renderForAvailableRules');
+Ext.get('addNewParamRule').on('click', addNewParamRule);

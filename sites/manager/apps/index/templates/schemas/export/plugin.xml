@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export>
+	<folder name="%idName%">
+		<folder name="view" />
+		<folder name="model" />
+	</folder>
+</export>

@@ -1,0 +1,34 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title><?php echo $this->getTitle(); ?></title>
+		<link rel="icon" type="image/png" href="ressources/sites/manager/_commons/images/favico.png" />
+		
+		<?php
+		
+			imports_css('enska.extjs.311.ext-all');
+			//imports_css('enska.extjs.311.slate');
+			imports_js('enska.extjs.311.ext-base');
+			imports_js('enska.extjs.311.adapters.ext.ext-base');
+			imports_js('enska.extjs.311.ext-all');
+			imports_js('enska.extjs.311.extends.FUF');
+			imports_js('enska.extjs.311.extends.StatusBar');
+			
+			imports_css('manager');
+			
+			//imports_css('enska.ejs.eDiv');
+			imports_js('enska.ejs.eDiv');
+			
+		?>
+		
+		<script language="JavaScript">
+			function toggleDivs()
+			{
+				showDiv('sht-content-websites');
+				showDiv('sht-content-users');
+				showDiv('sht-content-apps');
+				showDiv('sht-content-manager');
+				showDiv('sht-content-core');
+			}
+		</script>

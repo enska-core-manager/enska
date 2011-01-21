@@ -1,0 +1,587 @@
+var winExportApp;
+var count_aff_appEditor = 0;
+var manageAppsEditTreeAuth = "auth";
+var conn = new Ext.data.Connection();
+var manageAppsEditTreeUnAuth = "unauth";
+var manageAppsToolbar = new Ext.Toolbar();
+
+var manageAppEditorMainMenu = new Ext.menu.Menu ( {
+		id: 'manage-app-editor-main-menu',
+		items: [ {
+				text: 'Delete',
+				icon: '<?php echo $this->get('img')?>cross.png',
+				handler: confirmDeleteApp
+			},
+				'-', {
+				text: 'Export',
+				icon: '<?php echo $this->get('img')?>export.png',
+				handler: confirmExportApp
+			}
+		]
+	}
+);
+
+manageAppsToolbar.add ( {
+		text:'Save',
+		tooltip: 'Save modifications',
+		icon: '<?php echo $this->get('img')?>save.png',
+		handler: function() {
+			var idApp = appListingEditorGrid.selModel.getSelected().json.idName;
+			var idWebsite = appListingEditorGrid.selModel.getSelected().json.websiteId;
+			var appName = Ext.get('manage-app-name').dom.value;
+			var description = Ext.get('manage-app-description').dom.value;
+			var version = Ext.get('manage-app-version').dom.value;
+			var	updateFrom = Ext.get('url-update-app').dom.value;
+			var	updateCheck = Ext.get('check-update-app').dom.value;
+			
+			var updateAuto = '0';
+			if (Ext.get('auto-update-app').dom.checked) {
+				var updateAuto = '1';
+			}
+			
+			var req = conn.request ( {
+					url: '?act=execPlg&plg=manageApps',
+					method: 'POST',
+					params: "data=" + 'edit::' + idApp + '::' + idWebsite + '::' + appName + '::' + description + '::' + version + '::' + manageAppsEditTreeAuth + '::' + manageAppsEditTreeUnAuth + '::' + updateFrom + '::' + updateCheck + '::' + updateAuto,
+					success: function(resObj) {
+						if (resObj.responseText != "success") {
+							msgError(resObj.responseText);
+						}
+						else {
+							appsDataStore.reload();
+						}
+					}
+				}
+			);
+		}
+	},
+		'-', {
+		text:'Menu',
+		menu: manageAppEditorMainMenu
+	}
+);
+
+var manageApps = {
+	id: 'manageApps-panel',
+	title: 'EnsKa Core Manager - Manage applications',
+	contentEl: 'manageApps-content',
+	autoScroll: true,
+	items: [
+		manageAppsToolbar
+	]
+};
+
+var appsDataStore = new Ext.data.GroupingStore ( {
+		id: 'apps-datastore',
+		proxy: new Ext.data.HttpProxy ( {
+				url:'?act=loadInterface&lt=AppsGrid'																					
+			}
+		),
+		reader: new Ext.data.JsonReader ( {
+				root: 'results',
+				totalProperty: 'total',
+				id: 'id'
+			}, [
+				{name: 'IDApp', type: 'string', mapping: 'idName'},
+				{name: 'DPLName', type: 'string', mapping: 'name'},
+				{name: 'FrameworkID', type: 'string', mapping: 'frameworkId'},
+				{name: 'Framework', type: 'string', mapping: 'framework'},
+				{name: 'Description', type: 'string', mapping: 'description'},
+				{name: 'Version', type: 'string', mapping: 'version'},
+				{name: 'IDVersion', type: 'int', mapping: 'versionId'},
+				{name: 'IDWebsite', type: 'string', mapping: 'websiteId'},
+				{name: 'DPLWebsite', type: 'string', mapping: 'websiteName'},
+				{name: 'UPFrom', type: 'string', mapping: 'updateFrom'},
+				{name: 'UPAuto', type: 'int', mapping: 'updateAuto'},
+				{name: 'UPCheck', type: 'string', mapping: 'updateCheck'}
+			]
+		),
+		sortInfo: {
+			field: 'IDApp',
+			direction: "ASC"
+		},
+		groupField:'IDWebsite'
+	}
+);
+		
+var appsColumnModel = new Ext.grid.ColumnModel ( [ {
+			header: 'Application',
+			dataIndex: 'DPLName',
+			readOnly: true,
+			width: 500
+		}, {
+			header: 'ID name',
+			dataIndex: 'IDApp',
+			readOnly: true,
+			width: 200
+		}, {
+			header: 'Container',
+			dataIndex: 'DPLWebsite',
+			width: 200
+		}, {
+			header: 'Version',
+			dataIndex: 'Version',
+			readOnly: true,
+			width: 100
+		}, {
+			header: 'Description',
+			dataIndex: 'Description',
+			readOnly: true,
+			width: 300
+		}
+	]
+);
+
+var appListingEditorGrid =  new Ext.grid.EditorGridPanel ( {
+		id: 'appListingEditorGrid',
+		store: appsDataStore,
+		cm: appsColumnModel,
+		enableColLock:true,
+		clicksToEdit:2,
+		selModel: new Ext.grid.RowSelectionModel ( {
+				singleSelect: true
+			}
+		),
+		height: '30%',
+		anchor:'95%',
+		stateful: false,
+		height: 300,
+	}
+);
+
+var manageAppsEditUsers = new Ext.tree.TreePanel ( {
+		title: 'Users',
+		id:'manage-apps-users-panel',
+		cellCls:'td-new-website-users-panel',
+		iconCls:'icon-users',
+		border:true,
+		height: 175,
+		xtype: 'treepanel',
+		autoScroll: true,
+		rootVisible: true,
+		lines: true,
+		singleExpand: false,
+		useArrows: true,
+		animate: true,
+		dataUrl:'?act=loadInterface&lt=Users',
+		enableDD:true,
+		ddGroup:'listUsr',
+		root: {
+			nodeType: 'async',
+			draggable:false,
+			text: 'Users',
+			id:'node-root',
+			iconCls:'tree-server'
+		}
+	}
+);
+
+var manageAppsEditAuth = new Ext.tree.TreePanel ( {
+		title: 'Authorized users',
+		id:'manage-apps-auth-users-panel',
+		cellCls:'td-new-website-auth-users-panel',
+		iconCls:'icon-user-auth',
+		border:true,
+		height: 175,
+		xtype: 'treepanel',
+		autoScroll: true,
+		rootVisible: true,
+		lines: true,
+		singleExpand: true,
+		useArrows: true,
+		animate: true,
+		dataUrl:'?act=loadInterface&lt=AUTHUsers',
+		enableDD:true,
+		ddGroup:'listUsr',
+		root: {
+			nodeType: 'async',
+			draggable:false,
+			text: 'Users',
+			iconCls:'tree-valid'
+		},
+		listeners: {
+			append: function (tree, parent, node, index) {
+				manageAppsEditTreeAuth = manageAppsEditTreeAuth + "/" + node.id
+			},
+			beforemovenode: function (tree, node, oldParent, newParent, index) {
+				var newAuth = "";
+				var tmpAuth = manageAppsEditTreeAuth.split('/');
+				for (i=0; i<tmpAuth.length; i++) {
+					if((tmpAuth[i] != node.id) && (node.id != '') && (tmpAuth[i] != '')) {
+						newAuth = newAuth + tmpAuth[i] + '/';
+						if ((i+1) < tmpAuth.length) {
+							newAuth = newAuth + '/';
+						}
+					}
+				}
+				manageAppsEditTreeAuth = newAuth;
+			}
+		}
+	}
+);
+
+var manageAppsEditUnAuth = new Ext.tree.TreePanel ( {
+		title: 'Unauthorized users',
+		id:'manage-apps-unauth-users-panel',
+		cellCls:'td-new-website-unauth-users-panel',
+		iconCls:'icon-user-unauth',
+		border:true,
+		height: 175,
+		xtype: 'treepanel',
+		autoScroll: true,
+		rootVisible: true,
+		lines: true,
+		singleExpand: true,
+		useArrows: true,
+		animate: true,
+		dataUrl:'?act=loadInterface&lt=UNAUTHUsers',
+		enableDD:true,
+		ddGroup:'listUsr',
+		root: {
+			nodeType: 'async',
+			draggable:false,
+			text: 'Users',
+			iconCls:'tree-stop'
+		},
+		listeners: {
+			append: function (tree, parent, node, index) {
+				manageAppsEditTreeUnAuth = manageAppsEditTreeUnAuth + "/" + node.id
+			},
+			beforemovenode: function (tree, node, oldParent, newParent, index) {
+				var newUnAuth = "";
+				var tmpUnAuth = manageAppsEditTreeUnAuth.split('/');
+				for (i=0; i<tmpUnAuth.length; i++) {
+					if((tmpUnAuth[i] != node.id) && (node.id != '') && (tmpUnAuth[i] != '')) {
+						newUnAuth = newUnAuth + tmpUnAuth[i];
+						if ((i+1) < tmpUnAuth.length) {
+							newUnAuth = newUnAuth + '/';
+						}
+					}
+				}				
+				manageAppsEditTreeUnAuth = newUnAuth;
+			}
+		}
+	}
+);
+
+manageAppsEditUsers.getRootNode().expand();
+
+var manageAppWizard = {
+	xtype:'tabpanel',
+	id: 'manage-app-wizard',
+	plain: false,
+	border: false,
+	height: 500,
+	anchor:'95%',
+	deferredRender: false,
+	defaults:{bodyStyle:'padding:0px'},
+	contentEl: 'manageAppEditStart',
+	items: [ {
+			title:'Basics informations',
+			id: 'manage-app-informations-form',
+			iconCls:'icon-infos',
+			layout:'form',
+			xtype: 'form',
+			html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -180px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>app_b.png" width=128 height=128></div>',
+			defaults: {width: 230},
+			bodyStyle: 'padding-left: 230px; padding-top: 50px;',
+			items: [ {
+					id:'manage-app-name',
+					fieldLabel: 'Application\'s name',
+					anchor:'95%',
+					xtype: 'textfield',
+					readOnly: true
+				}, {
+					id:'manage-app-type',
+					fieldLabel: 'Application\'s type',
+					anchor:'95%',
+					xtype: 'textfield',
+					readOnly: true
+				}, {
+					id:'manage-app-container',
+					fieldLabel: 'Container',
+					anchor:'95%',
+					xtype: 'textfield',
+					readOnly: true
+				}, {
+					id:'manage-app-version',
+					fieldLabel: 'Version',
+					xtype: 'textfield',
+					anchor:'95%',
+					allowBlank:false
+				}, {
+					id:'manage-app-version-id',
+					fieldLabel: 'Revision',
+					xtype: 'textfield',
+					anchor:'95%',
+					readOnly: true
+				},
+				new Ext.form.TextArea ( {
+						id:'manage-app-description',
+						wrap:'on',
+						anchor:'95%',
+						fieldLabel: 'Description',
+						allowBlank:true
+					}
+				)
+			]
+		}, {	
+			title:'Security',
+			iconCls:'icon-lock-break',
+			baseCls:'x-plain',
+			layout:'table',
+			layoutConfig: {
+				columns: 3
+			},
+			items: [
+				manageAppsEditUsers,
+				manageAppsEditAuth,
+				manageAppsEditUnAuth
+			]
+		}, {
+			title:'Live update',
+			iconCls:'icon-drive-web',
+			id: 'manage-app-update-form',
+			bodyStyle: 'padding: 10px;',
+			contentEl: 'live-update-apps'
+		}
+	]
+};
+
+var wEditor = new Ext.Panel ( {
+		id: 'appEditor',
+		height: '100%',
+		border: false,
+		items: [
+			manageAppWizard
+		]
+	}
+);
+
+wEditor.render('appEditorRender');
+appsDataStore.load();
+appListingEditorGrid.render('appsGridRender');
+
+function confirmDeleteApp()
+{
+	if(appListingEditorGrid.selModel.getCount() == 1) {
+		Ext.MessageBox.confirm('EnsKa Core Manager','Are you sure you want to delete the application ' + appListingEditorGrid.selModel.getSelected().json.name + ' ?', deleteApp);
+	}
+	else {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select an application!');
+	}
+}
+
+function deleteApp(btn)
+{
+	if(btn == 'yes') {
+		var idApp = appListingEditorGrid.selModel.getSelected().json.idName;
+		var idWebsite = appListingEditorGrid.selModel.getSelected().json.websiteId;
+	
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=manageApps',
+				method: 'POST',
+				params: "data=" + 'delete::' + idApp + '::' + idWebsite,
+				success: function(resObj) {
+					if (resObj.responseText == "success") {
+						resetAppEditor();
+						appsDataStore.reload();
+					}
+					else {
+						msgError(resObj.responseText);
+						appsDataStore.reload();
+					}
+				}
+			}
+		);
+		
+	} 
+}
+
+function confirmExportApp()
+{
+	if(appListingEditorGrid.selModel.getCount() == 1) {
+		exportApp('yes');
+	}
+	else {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select an application!');
+	}
+}
+
+function exportApp(btn)
+{
+	if(btn == 'yes') {
+		winExportApp = new Ext.Window ( {
+				closeAction: 'close',
+				layout: "fit",
+				modal: true,
+				resizable: false,
+				closable: true,
+				title: "Export the application " + appListingEditorGrid.selModel.getSelected().json.name,
+				width: 500,
+				height: 250,
+				border: false,
+				items: [
+					exportAppWizard
+				]
+			}
+		);
+		winExportApp.show();
+	}
+}
+
+var exportAppWizard = {
+	xtype:'tabpanel',
+	plain: false,
+	activeTab: 0,
+	height:200,
+	deferredRender: false,
+	defaults:{bodyStyle:'padding:0px'},
+	items: [ {
+			title:'Export information',
+			iconCls:'icon-infos',
+			layout:'form',
+			xtype: 'form',
+			html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -90px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>export_b.png" width=128 height=128></div>',
+			defaults: {width: 230},
+			bodyStyle: 'padding-left: 230px; padding-top: 60px;',
+			items: [ {
+					xtype: 'checkbox',
+					id:'is-app-release',
+					fieldLabel: 'Create a release point',
+					anchor:'95%'
+				},
+			]
+		}
+	],
+	buttons: [ {
+			text: 'Export',
+			handler: function() {
+				var website = appListingEditorGrid.selModel.getSelected().json.websiteId;
+				var app = appListingEditorGrid.selModel.getSelected().json.idName;
+				var release = 2;
+				if (Ext.get('is-app-release').dom.checked) {
+					var release = 1;
+				}
+
+				msgWait('EnsKa Core is exporting the application ' + appListingEditorGrid.selModel.getSelected().json.name +'...');
+				
+				var req = conn.request ( {
+						url: '?act=execPlg&plg=manageApps',
+						method: 'POST',
+						params: "data=" + 'export::' + website + '::' + app + '::' + release,
+						success: function(resObj) {
+							if (resObj.responseText == 'success') {
+								msgOk('The application ' + appListingEditorGrid.selModel.getSelected().json.name + ' has been exported !');
+								if (release == 1) {
+									var	up = appListingEditorGrid.selModel.getSelected().json.versionId
+									up++;
+									Ext.get('manage-app-version-id').dom.value = up;
+									appsDataStore.reload();
+								}
+								winExportApp.close();
+							}
+							else {
+								msgError(resObj.responseText);
+							}
+						}
+					}
+				);
+			}
+		},
+		{
+			text: 'Cancel',
+			handler: function() {
+				winExportApp.close();
+			}
+		}
+	]
+};
+
+function fillAppEditor()
+{	
+	if (count_aff_appEditor == 0) {
+		Ext.getCmp('manage-app-wizard').activate('manage-app-informations-form');
+		count_aff_appEditor++;
+	}
+	
+	Ext.get('manage-app-name').dom.value = appListingEditorGrid.selModel.getSelected().json.name;
+	Ext.get('manage-app-type').dom.value = appListingEditorGrid.selModel.getSelected().json.framework;
+	Ext.get('manage-app-version').dom.value = appListingEditorGrid.selModel.getSelected().json.version;
+	Ext.get('manage-app-version-id').dom.value = appListingEditorGrid.selModel.getSelected().json.versionId;
+	Ext.get('manage-app-container').dom.value = appListingEditorGrid.selModel.getSelected().json.websiteName;
+	Ext.get('manage-app-description').dom.value = appListingEditorGrid.selModel.getSelected().json.description;
+	Ext.get('check-update-app').dom.value = appListingEditorGrid.selModel.getSelected().json.updateCheck;
+	Ext.get('live-update-infos-app').update('');
+	
+	Ext.get('url-update-app').dom.value = appListingEditorGrid.selModel.getSelected().json.updateFrom;
+	if (appListingEditorGrid.selModel.getSelected().json.updateFrom == 'none') {
+		Ext.get('url-update-app').dom.value = '';
+	}
+	
+	Ext.get('auto-update-app').dom.checked = false
+	if (appListingEditorGrid.selModel.getSelected().json.updateAuto == 1) {
+		Ext.get('auto-update-app').dom.checked = true;
+	}
+	
+	manageAppsEditTreeAuth = "auth";
+	manageAppsEditTreeUnAuth = "unauth";
+	
+	var authLoader = '?act=loadInterface&lt=AppsUsers&data=' + appListingEditorGrid.selModel.getSelected().json.idName + ';' + appListingEditorGrid.selModel.getSelected().json.websiteId + ';1';
+	Ext.getCmp('manage-apps-auth-users-panel').loader.dataUrl = authLoader;
+	
+	var unAuthLoader = '?act=loadInterface&lt=AppsUsers&data=' + appListingEditorGrid.selModel.getSelected().json.idName + ';' + appListingEditorGrid.selModel.getSelected().json.websiteId + ';2';
+	Ext.getCmp('manage-apps-unauth-users-panel').loader.dataUrl = unAuthLoader;
+	
+	Ext.getCmp('manage-apps-auth-users-panel').root.reload();
+	Ext.getCmp('manage-apps-unauth-users-panel').root.reload();
+	Ext.getCmp('manage-apps-users-panel').root.reload();
+	
+}
+
+function resetAppEditor()
+{	
+	Ext.get('manage-app-name').dom.value = "";
+	Ext.get('manage-app-type').dom.value = "";
+	Ext.get('manage-app-version').dom.value = "";
+	Ext.get('manage-app-version-id').dom.value = "";
+	Ext.get('manage-app-container').dom.value = "";
+	Ext.get('manage-app-description').dom.value = "";
+	Ext.get('check-update-app').dom.value = 'D';
+	Ext.get('url-update-app').dom.value = '';
+	Ext.get('auto-update-app').dom.checked = false;
+	Ext.get('live-update-infos-app').update('');
+}
+
+
+function checkUpdateApp()
+{
+	msgWait('EnsKa Core is checking update for <i><b>' + appListingEditorGrid.selModel.getSelected().json.name + '</i></b>...');
+	var req = conn.request ( {
+			url: '?act=execPlg&plg=managePlugins',
+			method: 'POST',
+			params: "data=" + 'checkUpdate::' + appListingEditorGrid.selModel.getSelected().json.versionId + '::' + appListingEditorGrid.selModel.getSelected().json.updateFrom,
+			success: function(resObj) {
+				var	msgTab = resObj.responseText.split(';');
+				if (msgTab[0] == 'success') {
+					msgOk('New update is available for application <i><b>' + appListingEditorGrid.selModel.getSelected().json.name + '</i></b>');
+					Ext.get('live-update-infos-app').update('<span style="color: green;">New update is available!<br>Version :<b>' + msgTab[2] +'</b><br>Revision :<b>' + msgTab[1] + '</b><br>Size :<b>' + msgTab[3] +'</b><br>Release date :<b>' + msgTab[4] + '</b><br><input type="button" id="btn-update-app" value="Update now" /></span>');
+				}
+				else {
+					var	msgTab = resObj.responseText.split(';');
+					if (msgTab[0] == 'err') {
+						msgError(msgTab[1]);
+						Ext.get('live-update-infos-app').update('<span style="color: red;">Error on get update!<br>' + msgTab[1] +'</span>');
+					}
+					else {
+						msgOk('No new update is available for application <i><b>' + appListingEditorGrid.selModel.getSelected().json.name + '</i></b>');
+						Ext.get('live-update-infos-app').update('<span style="color: royalblue;">The application ' + appListingEditorGrid.selModel.getSelected().json.name +' is up to date!</span>');
+					}
+				}
+			}
+		}
+	);
+}
+
+appListingEditorGrid.on('rowClick', fillAppEditor);
+Ext.get('btn-check-update-app').on('click', checkUpdateApp);

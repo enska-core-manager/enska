@@ -1,0 +1,307 @@
+var	selectedWebsite = 'default';
+var conn = new Ext.data.Connection();
+var manageLibrariesToolbar = new Ext.Toolbar();
+
+var websitesDataStore = new Ext.data.JsonStore ( {
+		autoDestroy: true,
+		url: '?act=loadInterface&lt=WebsiteData&data=libs',
+		root: 'items',
+		idProperty: 'id',
+		fields: ['id', 'dpl_name', 'id_name']
+	}
+);
+
+manageLibrariesToolbar.add ( {
+		text: 'Delete',
+		icon: '<?php echo $this->get('img')?>cross.png',
+		handler: confirmDeleteLibrary
+	},
+		'-', {
+		text: 'Import',
+		icon: '<?php echo $this->get('img')?>import.png',
+		handler: uploadLibrary
+	},{
+		text: 'Export',
+		icon: '<?php echo $this->get('img')?>export.png',
+		handler: confirmExportLibrary
+	},
+		'-', {
+		text: 'Website :'
+	}, {
+		xtype: 'combo',
+		id: 'combo-select-websites',
+		name: 'comboSelectWebsites',
+		loadingText: 'Loading...',
+		typeAhead: true,
+		hideTrigger: false,
+		triggerAction: 'all',
+		mode: 'remote',
+		emptyText: '     Default',
+		width: 200,
+		displayField: 'dpl_name',
+		valueField: 'id_name',
+		store: websitesDataStore,
+		minChars: 1,
+		onSelect: function (item) {
+			Ext.getCmp('combo-select-websites').collapse();
+			Ext.getCmp('combo-select-websites').setValue(item.data.dpl_name);
+			selectedWebsite = item.data.id_name;
+			
+			var	libsLoader = '?act=loadInterface&lt=LibrariesGrid&data=' + item.data.id_name;
+			librariesDataStore.proxy.conn.url = libsLoader;
+			librariesDataStore.reload();
+		}
+	}
+);
+
+var manageLibraries = {
+	id: 'manageLibraries-panel',
+	title: 'EnsKa Core Manager - Manage libraries',
+	contentEl: 'manageLibraries-content',
+	autoScroll: true,
+	items: [
+		manageLibrariesToolbar
+	]
+};
+
+var librariesDataStore = new Ext.data.Store ( {
+		id: 'libraries-datastore',
+		proxy: new Ext.data.HttpProxy ( {
+				url:'?act=loadInterface&lt=LibrariesGrid&data=default'																					
+			}
+		),
+		reader: new Ext.data.JsonReader ( {
+				root: 'results',
+				totalProperty: 'total',
+				id: 'id'
+			}, [
+				{name: 'Name', type: 'string', mapping: 'name'},
+				{name: 'Loaded', type: 'string', mapping: 'loaded'}
+				
+			]
+		),
+		sortInfo: {
+			field: 'Name',
+			direction: "ASC"
+		}
+	}
+);
+
+var librariesColumnModel = new Ext.grid.ColumnModel ( [ {
+			header: 'Library',
+			dataIndex: 'Name',
+			readOnly: true,
+			width: 500
+		}, {
+			header: 'Default',
+			dataIndex: 'Loaded',
+			width: 100,
+			editor: new Ext.form.ComboBox ( {
+					typeAhead: true,
+					triggerAction: 'all',
+					store:new Ext.data.SimpleStore ( {
+							fields:['displayValue', 'displayName'],
+							data: [['enable','enable'],['disable','disable']]
+						}
+					),
+					mode: 'local',
+					displayField: 'displayName',
+					valueField: 'displayValue',
+					lazyRender:true,
+					listClass: 'x-combo-list-small'
+				}
+			)
+		}
+	]
+);
+
+librariesColumnModel.defaultSortable = true;
+var libraryListingEditorGrid =  new Ext.grid.EditorGridPanel ( {
+		id: 'libraryListingEditorGrid',
+		store: librariesDataStore,
+		cm: librariesColumnModel,
+		enableColLock:false,
+		clicksToEdit:1,
+		selModel: new Ext.grid.RowSelectionModel ( {
+				singleSelect: true
+			}
+		),
+		anchor:'95%',
+		border: false,
+		stateful: false,
+		autoScroll: true
+	}
+);
+
+function saveGridLibs(oGrid_event)
+{
+	var lib = oGrid_event.record.data.Name;
+	var loaded = oGrid_event.record.data.Loaded;
+	
+	var req = conn.request ( {
+			url: '?act=execPlg&plg=manageLibraries',
+			method: 'POST',
+			params: "data=" + 'edit::' + lib + '::' + loaded + '::' + selectedWebsite,
+			success: function(resObj) {
+				if (resObj.responseText == "success") {
+					librariesDataStore.commitChanges();
+					var	libsLoader = '?act=loadInterface&lt=LibrariesGrid&data=' + selectedWebsite;
+					librariesDataStore.proxy.conn.url = libsLoader;
+					librariesDataStore.reload();
+				}
+				else {
+					msgError(resObj.responseText);
+					librariesDataStore.reload();					
+				}
+			}
+		}
+	);
+}
+
+
+function confirmExportLibrary()
+{
+	if(libraryListingEditorGrid.selModel.getCount() == 1) {
+		Ext.MessageBox.confirm('EnsKa Core Manager','Are you sure you want export the library ' + libraryListingEditorGrid.selModel.getSelected().json.name + ' ?', exportLibrary);
+	}
+	else {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select a library!');
+	}
+}
+
+function exportLibrary(btn)
+{
+	if(btn == 'yes') {
+		msgWait('EnsKa Core is exporting the library ' + libraryListingEditorGrid.selModel.getSelected().json.name +'...');
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=manageLibraries',
+				method: 'POST',
+				params: "data=" + 'export::' + libraryListingEditorGrid.selModel.getSelected().json.name,
+				success: function(resObj) {
+					if (resObj.responseText == "success") {
+						msgOk('The library has been exported!');
+					}
+					else {
+						msgError(resObj.responseText);
+					}
+				}
+			}
+		);
+	} 
+}
+
+function confirmDeleteLibrary()
+{
+	if(libraryListingEditorGrid.selModel.getCount() == 1) {
+		Ext.MessageBox.confirm('EnsKa Core Manager','Some applications have risk to doesn\'t work correctly any more<br>Are you sure want to delete the library <b>' + libraryListingEditorGrid.selModel.getSelected().json.name + '</b> ?', deleteLibrary);
+	}
+	else {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select a library!');
+	}
+}
+
+function deleteLibrary(btn)
+{
+	if(btn == 'yes') {
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=manageLibraries',
+				method: 'POST',
+				params: "data=" + 'delete::' + libraryListingEditorGrid.selModel.getSelected().json.name,
+				success: function(resObj) {
+					if (resObj.responseText == "success") {
+						var	libsLoader = '?act=loadInterface&lt=LibrariesGrid&data=' + selectedWebsite;
+						librariesDataStore.proxy.conn.url = libsLoader;
+						librariesDataStore.reload();
+					}
+					else {
+						msgError(resObj.responseText);
+						var	libsLoader = '?act=loadInterface&lt=LibrariesGrid&data=' + selectedWebsite;
+						librariesDataStore.proxy.conn.url = libsLoader;
+						librariesDataStore.reload();
+					}
+				}
+			}
+		);
+	} 
+}
+
+function uploadLibrary()
+{
+	var uploadLibraryWizard = new Ext.FormPanel ( {
+			fileUpload: true,
+			width: 400,
+			frame: true,
+			autoHeight: true,
+			bodyStyle: 'padding: 10px 10px 0 10px;',
+			labelWidth: 150,
+			defaults: {
+				anchor: '95%',
+				allowBlank: false,
+				msgTarget: 'side'
+			},
+			items: [ {
+					xtype: 'fileuploadfield',
+					id: 'form-file',
+					emptyText: 'Select a library archive...',
+					fieldLabel: 'Library',
+					name: 'lib-path',
+					buttonText: '...',
+					buttonCfg: {
+						iconCls: 'icon-browse'
+					}
+				}
+			],
+			buttons: [ {
+					text: 'Upload',
+					handler: function() {
+						if(uploadLibraryWizard.getForm().isValid()) {
+							uploadLibraryWizard.getForm().submit ( {
+									url: '?act=execPlg&plg=manageLibraries',
+									method: 'POST',
+									params: "data=" + 'import',
+									waitMsg: 'EnsKa Core is uploading the library...',
+									success: function(uploadLibraryWizard, o) {
+										obj = Ext.util.JSON.decode(o.response.responseText);
+										tabMsg = obj.msg.msgInfo.split(';');
+										if (tabMsg[0] != 'err') {
+											var	libsLoader = '?act=loadInterface&lt=LibrariesGrid&data=' + selectedWebsite;
+											librariesDataStore.proxy.conn.url = libsLoader;
+											librariesDataStore.reload();
+											winuploadLibrary.close();
+											msgOk(tabMsg[0]);
+										}
+										else {
+											winuploadLibrary.close();
+											msgError(tabMsg[1]);
+										}
+									}
+								}
+							);
+						}
+					}
+				}
+			]
+		}
+	);
+	
+	var winuploadLibrary = new Ext.Window ( {
+			closeAction: 'close',
+			layout: 'fit',
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: 'Upload a new library',
+			width: 600,
+			height: 110,
+			border: false,
+			items: [
+				uploadLibraryWizard
+			]
+		}
+	);
+	winuploadLibrary.show();
+}
+
+librariesDataStore.load();
+libraryListingEditorGrid.render('librariesGridRender');
+libraryListingEditorGrid.on('afteredit', saveGridLibs);

@@ -1,0 +1,165 @@
+var conn = new Ext.data.Connection();
+var manageGroupsToolbar = new Ext.Toolbar();
+
+manageGroupsToolbar.add ( {
+			text: 'Delete',
+			icon: '<?php echo $this->get('img')?>cross.png',
+			handler: confirmDeleteGroup
+	}
+);
+
+var manageGroups = {
+	id: 'manageGroups-panel',
+	title: 'EnsKa Core Manager - Manage groups',
+	autoScroll: true,
+	contentEl: 'manageGroups-content',
+	autoScroll: true,
+	items: [
+		manageGroupsToolbar
+	]
+};
+
+var groupsDataStore = new Ext.data.Store ( {
+		id: 'groups-datastore',
+		proxy: new Ext.data.HttpProxy ( {
+				url:'?act=loadInterface&lt=GroupsGrid'
+			}
+		),
+		reader: new Ext.data.JsonReader ( {
+				root: 'results',
+				totalProperty: 'total',
+				id: 'id'
+			}, [ 
+				{name: 'GID', type: 'int', mapping: 'gid', width: 5},
+				{name: 'Name', type: 'string', mapping: 'name', width: 200},
+				{name: 'Description', type: 'string', mapping: 'description', width: 15},
+				{name: 'View', type: 'string', mapping: 'view'},
+				{name: 'Managers', type: 'string', mapping: 'managers'},
+				{name: 'GType', type: 'string', mapping: 'gType'}
+			]
+		),
+		sortInfo: {
+			field: 'GID',
+			direction: "ASC"
+		}
+	}
+);
+
+var groupsColumnModel = new Ext.grid.ColumnModel ( [ {
+			header: '# GID',
+			readOnly: true,
+			dataIndex: 'GID',
+			width: 45
+		}, {
+			header: 'Name',
+			dataIndex: 'Name',
+			editor: new Ext.form.TextField ( {
+					allowBlank: false,
+					maxLength: 20,
+					/*maskRe: /([a-zA-Z0-9\s]+)$/*/
+				}
+			),
+			width: 300
+		}, {
+			header: 'Description',
+			dataIndex: 'Description',
+			editor: new Ext.form.TextField ( {
+				  allowBlank: false,
+				 /* maskRe: /([a-zA-Z0-9\s]+)$/*/
+				}
+			),
+			width: 600
+		}, {
+			header: 'View',
+			readOnly: true,
+			dataIndex: 'View',
+			width: 100
+		}, {
+			header: 'Type',
+			readOnly: true,
+			dataIndex: 'GType',
+			width: 100
+		},
+	]
+);
+
+groupsColumnModel.defaultSortable = true;
+var groupListingEditorGrid =  new Ext.grid.EditorGridPanel ( {
+		border: false,
+		id: 'groupListingEditorGrid',
+		store: groupsDataStore,
+		cm: groupsColumnModel,
+		enableColLock:false,
+		clicksToEdit:2,
+		selModel: new Ext.grid.RowSelectionModel ( {
+				singleSelect: true
+			}
+		),
+		height: 300,
+		anchor:'95%'
+	}
+);
+
+function saveGridGroup(oGrid_event)
+{
+	var gid = oGrid_event.record.data.GID;
+	var	name = oGrid_event.record.data.Name;
+	var	description = oGrid_event.record.data.Description;
+	
+	var req = conn.request ( {
+			url: '?act=execPlg&plg=manageGroups',
+			method: 'POST',
+			params: "data=" + 'editByGrid::' + gid + '::' + name + '::' + description,
+			success: function(resObj) {
+				if (resObj.responseText == "success") {
+					groupsDataStore.commitChanges();
+					groupsDataStore.reload();
+				}
+				else {
+					msgError(resObj.responseText);
+					groupsDataStore.reload();
+				}
+			}
+		}
+	);	
+}
+
+function confirmDeleteGroup()
+{
+	if(groupListingEditorGrid.selModel.getCount() == 1) {
+		if (groupListingEditorGrid.selModel.getSelected().json.gType == "sys") {
+			Ext.Msg.show({title:'EnsKa Core Manager',msg: 'You can\'t delete a system group !',buttons: Ext.Msg.OK,icon: Ext.MessageBox.WARNING,});
+		}
+		else {
+			Ext.MessageBox.confirm('EnsKa Core Manager','Are you sure you want delete ' + groupListingEditorGrid.selModel.getSelected().json.name + ' ?', deleteGroup);
+		}
+	}
+	else {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select a group!');
+	}
+}
+
+function deleteGroup(btn)
+{
+	if(btn == 'yes') {
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=manageGroups',
+				method: 'POST',
+				params: "data=" + 'delete::' + groupListingEditorGrid.selModel.getSelected().json.gid,
+				success: function(resObj) {
+					if (resObj.responseText == "success") {
+						groupsDataStore.reload();
+					}
+					else {
+						msgError(resObj.responseText);
+						groupsDataStore.reload();
+					}
+				}
+			}
+		);
+	}
+}
+
+groupsDataStore.load();
+groupListingEditorGrid.render('groupsGridRender');
+groupListingEditorGrid.on('afteredit', saveGridGroup);

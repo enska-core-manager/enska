@@ -1,0 +1,102 @@
+if (obj.id == "win-newUser")
+{
+	var conn = new Ext.data.Connection();
+
+	var newUserWizard = {
+		plain: false,
+		height:235,
+		deferredRender: false,
+		id: 'new-user-informations-form',
+		iconCls:'icon-infos',
+		layout:'form',
+		xtype: 'form',
+		html: '<div style="padding: 5px; background: white; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -120px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>user_add_b.png" width=128 height=128></div>',
+		defaults: {width: 230},
+		bodyStyle: 'padding-left: 230px; padding-top: 60px;',
+		items: [ {
+				id:'new-user-login',
+				fieldLabel: 'Login',
+				anchor:'95%',
+				xtype: 'textfield',
+				minLength: 3,
+				maxLength: 50,
+				minLengthText: 'User\'s login must be at least 3 characters long.',
+				maxLengthText: 'User\'s login must not be bigger than 50 characters long.',
+				blankText: 'You must give a user\'s name',
+				allowBlank:false
+			}, {
+				id:'new-user-password',
+				fieldLabel: 'Password',
+				anchor:'95%',
+				xtype: 'textfield',
+				minLength: 3,
+				maxLength: 50,
+				minLengthText: 'User\'s password must be at least 3 characters long.',
+				maxLengthText: 'User\'s password must not be bigger than 50 characters long.',
+				blankText: 'You must give a user\'s password',
+				allowBlank:false
+			}, {
+				id:'new-user-mail',
+				fieldLabel: 'E-Mail',
+				anchor:'95%',
+				xtype: 'textfield',
+				minLength: 3,
+				maxLength: 100,
+				minLengthText: 'User\'s e-mail must be at least 3 characters long.',
+				maxLengthText: 'User\'s e-mail must not be bigger than 100 characters long.',
+				blankText: 'You must give a user\'s e-mail',
+				allowBlank:false
+			}
+		],
+		buttons: [ {
+				text: 'Save',
+				id: 'new-user-save-btn',
+				handler: function() {
+					var login = Ext.get('new-user-login').dom.value;
+					var password = Ext.get('new-user-password').dom.value;
+					var mail = Ext.get('new-user-mail').dom.value;
+					
+					msgWait('EnsKa Core is creating the new user ' + login +'...');
+					var req = conn.request ( {
+							url: '?act=execPlg&plg=newUser',
+							method: 'POST',
+							params: "data=" + 'create::' + login + '::' + password + '::' + mail,
+							success: function(resObj) {
+								if (resObj.responseText == 'success') {
+									msgOk('The user ' + login + ' has been created !');
+									usersDataStore.reload();
+									winNewUser.close();
+								}
+								else {
+									msgError(resObj.responseText);
+								}
+							}
+						}
+					);
+				}
+			}, {
+				text: 'Cancel',
+				handler: function() {
+					winNewUser.close();
+				}
+			}
+		]
+	};
+
+	var winNewUser = new Ext.Window ( {
+			closeAction: 'close',
+			layout: "fit",
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: "Create a new user",
+			width: 625,
+			height: 250,
+			border: false,
+			items:  [
+				newUserWizard
+			]
+		}
+	);
+	winNewUser.show();
+}

@@ -1,0 +1,44 @@
+
+<div id="managePlugins-content">
+	<div id="pluginsGridRender"></div>
+	<div id="pluginEditorRender"></div>
+</div>
+
+<div id="managePluginEditStart">
+	<br><br><br><br><br><br><br><br>
+	<center>
+		<h3>Select a plug-in to edit.</h3>
+	</center>
+</div>
+
+<div id="live-update-plugs">
+	<table>
+		<tr>
+			<td><h5>Update from :</h5></td>
+			<td><input type="text" id="url-update-plug" size="50"></td>
+			<td>&nbsp;&nbsp;&nbsp;<?php $this->image('drive_network.png', Array('type'=>'usr', 'width'=>'16', 'height'=>'16')); ?></td>
+		</tr>
+		<tr>
+			<td><h5>Check update :</h5></td>
+			<td>
+				<select id="check-update-plug">
+					<option value="D">Daily</option>
+					<option value="W">Weekly</option>
+					<option value="M">Monthly</option>
+				</select>
+			</td>
+			<td>&nbsp;&nbsp;&nbsp;<?php $this->image('calendar.png', Array('type'=>'usr', 'width'=>'16', 'height'=>'16')); ?></td>
+		</tr>
+		<tr>
+			<td><h5>Auto update :</h5></td>
+			<td><input type="checkbox" id="auto-update-plug"></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td></td>
+			<td><input type="button" id="btn-check-update-plug" value="Check now"></td>
+		</tr>
+	</table>
+	<br>
+	<div id="live-update-infos-plug" />
+</div>

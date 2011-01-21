@@ -1,0 +1,125 @@
+var conn = new Ext.data.Connection();
+var manageTreeAvailableUsersOptionsValue = "opts";
+
+var manageUsersOptions = {
+	id: 'manageUsersOptions-panel',
+	title: 'EnsKa Core Manager - Manage Users\' Options',
+	autoScroll: true,
+	contentEl: 'manageUsersOptions-content',
+	autoScroll: true
+};
+
+var manageTreeAvailableUsersOptions = new Ext.tree.TreePanel ( {
+		title: 'Available options',
+		id:'manage-tree-available-users-options',
+		iconCls:'icon-vcard',
+		border:true,
+		height: 400,
+		width: 300,
+		xtype: 'treepanel',
+		autoScroll: true,
+		rootVisible: true,
+		lines: true,
+		singleExpand: false,
+		useArrows: true,
+		animate: true,
+		dataUrl:'?act=loadInterface&lt=AvailableUsersOptions',
+		enableDD:true,
+		ddGroup:'listUsrOpts',
+		contextMenu: new Ext.menu.Menu({
+		items: [ {
+				id: 'delete-node',
+				text: 'Remove',
+				icon: '<?php echo $this->get('img')?>cross.png'
+			}
+		],
+        listeners: {
+            itemclick: function(item) {
+                switch (item.id) {
+                    case 'delete-node':
+						var opt = item.parentMenu.contextNode.id.substr(0, item.parentMenu.contextNode.id.length - 3);
+						var nodeOpt = item.parentMenu.contextNode;
+						Ext.Msg.show ( {
+							   title:'EnsKa Core Manager',
+							   msg: 'Are you sure to remove ' + opt + ' ?<br>' + opt +'\'s column data will be erased!',
+							   buttons: Ext.Msg.YESNO,
+							   fn: function (btn) {
+									if (btn == 'yes') {
+										var req = conn.request ( {
+												url: '?act=execPlg&plg=manageUsers',
+												method: 'POST',
+												params: "data=" + 'setOptions::del::' + opt,
+												success: function(resObj) {
+													if (resObj.responseText == "success") {
+														Ext.getCmp('manage-tree-available-users-options').root.reload();
+													}
+													else {
+														msgError(resObj.responseText);
+													}
+												}
+											}
+										);
+									}
+							   },
+							   animEl: 'elId',
+							   icon: Ext.MessageBox.QUESTION
+							}
+						);
+                        break;
+					}
+				}
+			}
+		}
+	),
+		listeners: {
+			contextmenu: function(node, e) {
+				node.select();
+				var c = node.getOwnerTree().contextMenu;
+				c.contextNode = node;
+				c.showAt(e.getXY());
+			}
+		},
+		root: {
+			nodeType: 'async',
+			draggable:false,
+			text: 'Options',
+			id:'node-root'
+		}
+	}
+);
+
+function addNewUserOptionField()
+{
+	var fieldName = Ext.get('u-fieldname').dom.value;
+	var fieldType = Ext.get('u-fieldtype').dom.value;
+	var fieldSize = Ext.get('u-fieldsize').dom.value;
+	var fieldDefault = Ext.get('u-fielddefault').dom.value;
+	
+	var fieldNotNull = 'ko';
+	if (Ext.get('u-fieldoptionnn').dom.checked){
+		var fieldNotNull = 'ok';
+	}
+	
+	var req = conn.request ( {
+			url: '?act=execPlg&plg=manageUsers',
+			method: 'POST',
+			params: "data=" + 'setOptions::add::' + fieldName + '::' + fieldType + '::' + fieldSize + '::' + fieldDefault + '::' + fieldNotNull,
+			success: function(resObj) {
+				if (resObj.responseText == "success") {
+					Ext.getCmp('manage-tree-available-users-options').root.reload();
+					Ext.get('u-fieldname').dom.value = '';
+					Ext.get('u-fieldtype').dom.value = '';
+					Ext.get('u-fieldsize').dom.value = '';
+					manageTreeAvailableUsersOptionsValue = "opts";
+				}
+				else {
+					msgError(resObj.responseText);
+				}
+			}
+		}
+	);
+}
+
+manageTreeAvailableUsersOptions.getRootNode().expand();
+manageTreeAvailableUsersOptions.render('renderForAvailableUsersOptions');
+Ext.get('addNewUserOptionField').on('click', addNewUserOptionField);

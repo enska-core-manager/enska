@@ -1,0 +1,449 @@
+
+	}
+	else
+	{
+		Ext.getCmp('content-panel').layout.setActiveItem(obj.id + '-panel');
+	}
+};
+
+var topMenuFile = new Ext.menu.Menu
+({
+	id: 'top-menu-file',
+	items: 
+	[
+		{
+			text: 'Logout',
+			icon: '<?php echo $this->get('img')?>stop.png'
+		}
+	]
+});
+
+var topMenuWebsite = new Ext.menu.Menu
+({
+	id: 'top-menu-website',
+	items: 
+	[
+		{
+			text: 'New website',
+			id: 'win-newWebsite',
+			icon: '<?php echo $this->get('img')?>world_add.png',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'Manage websites',
+			id: 'manageWebsites',
+			icon: '<?php echo $this->get('img')?>website.png',
+			handler: actionsShortcuts
+		},
+			'-',
+		{
+			text: 'New plug-in',
+			id: 'win-newPlugin',
+			icon: '<?php echo $this->get('img')?>plugin_add.png',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'Plug-ins',
+			id: 'managePlugins',
+			icon: '<?php echo $this->get('img')?>plugin.png',
+			handler: actionsShortcuts
+		},
+			'-',
+		{
+			text: 'New framework',
+			id: 'win-newFramework',
+			icon: '<?php echo $this->get('img')?>framework_add.png',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'Frameworks',
+			id: 'manageFrameworks',
+			icon: '<?php echo $this->get('img')?>framework.png',
+			handler: actionsShortcuts
+		}
+	]
+});
+
+/*var subMenuWServices = new Ext.menu.Menu
+({
+	id: 'sub-menu-cores',
+	items: 
+	[
+		{
+			text: 'New web service',
+			id: 'win-newWService',
+			icon: '<?php echo $this->get('img')?>add.png',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'Manage',
+			id: 'manageWServices',
+			icon: '<?php echo $this->get('img')?>page_white_world.png',
+			handler: actionsShortcuts
+		}
+	]
+});*/
+
+var topMenuCore = new Ext.menu.Menu
+({
+	id: 'top-menu-core',
+	items: 
+	[
+		{
+			text: 'Import',
+			id: 'win-importWizard',
+			icon: '<?php echo $this->get('img')?>import.png',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'Export',
+			id: 'win-exportWizard',
+			icon: '<?php echo $this->get('img')?>export.png',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'System backup',
+			id: 'win-systemBackup',
+			icon: '<?php echo $this->get('img')?>save_black.png',
+			handler: actionsShortcuts
+		},
+			'-',
+		{
+			text: 'Librairies',
+			id: 'manageLibraries',
+			icon: '<?php echo $this->get('img')?>page_white_code.png',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'Cache manager',
+			id: 'manageCache',
+			icon: '<?php echo $this->get('img')?>cache.png',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'Logs manager',
+			id: 'manageLogs',
+			icon: '<?php echo $this->get('img')?>address-book.png',
+			handler: actionsShortcuts
+		},
+			'-',
+		{
+			text: 'Core settings',
+			id: 'manageCore',
+			icon: '<?php echo $this->get('img')?>building.png',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'Platforme environment',
+			id: 'win-manageEnvironment',
+			icon: '<?php echo $this->get('img')?>layers.png',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'Databases',
+			id: 'manageDatabases',
+			icon: '<?php echo $this->get('img')?>database.png',
+			handler: actionsShortcuts
+		}/*,
+		{
+			text: 'Java Connector',
+			icon: '<?php echo $this->get('img')?>cup.png'
+		}*/
+		
+	]
+});
+
+var topMenuApps = new Ext.menu.Menu
+({
+	id: 'top-menu-apps',
+	items: 
+	[
+		{
+			text: 'New application',
+			id: 'win-newApp',
+			icon: '<?php echo $this->get('img')?>brick_add.png',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'Applications',
+			id: 'manageApps',
+			icon: '<?php echo $this->get('img')?>bricks.png',
+			handler: actionsShortcuts
+		},
+			'-',
+		{
+			text: 'New web service',
+			id: 'win-newWService',
+			icon: '<?php echo $this->get('img')?>add.png',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'Manage web services',
+			id: 'manageWServices',
+			icon: '<?php echo $this->get('img')?>page_white_world.png',
+			handler: actionsShortcuts
+		},
+		/*{
+			text: 'WEB Services',
+			icon: '<?php echo $this->get('img')?>wservices_m.png',
+			menu: subMenuWServices
+		},*/
+			'-',
+		{
+			text: 'New form rule',
+			id: 'win-newRule',
+			icon: '<?php echo $this->get('img')?>application_form_add.png',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'Form rules',
+			id: 'manageRules',
+			icon: '<?php echo $this->get('img')?>application_cascade.png',
+			handler: actionsShortcuts
+		}
+	]
+});
+
+var topMenuUsers = new Ext.menu.Menu
+({
+	id: 'top-menu-users',
+	items: 
+	[
+		{
+			text: 'New user',
+			id: 'win-newUser',
+			icon: '<?php echo $this->get('img')?>user_add.png',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'Manage users',
+			id: 'manageUsers',
+			icon: '<?php echo $this->get('img')?>group.png',
+			handler: actionsShortcuts
+		},
+			'-',
+		{
+			text: 'New group',
+			icon: '<?php echo $this->get('img')?>users_add.png',
+			id: 'win-newGroup',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'Manage groups',
+			id: 'manageGroups',
+			icon: '<?php echo $this->get('img')?>users.png',
+			handler: actionsShortcuts
+		},
+			'-',
+		{
+			text: 'New role',
+			icon: '<?php echo $this->get('img')?>role_add.png',
+			id: 'win-newACL',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'Manage roles',
+			id: 'manageRoles',
+			icon: '<?php echo $this->get('img')?>role.png',
+			handler: actionsShortcuts
+		},
+			'-',
+		{
+			text: 'Authentification',
+			id: 'manageAuthentification',
+			icon: '<?php echo $this->get('img')?>group_key.png',
+			handler: actionsShortcuts
+		},
+		{
+			text: 'Users options',
+			id: 'manageUsersOptions',
+			icon: '<?php echo $this->get('img')?>ucard_edit_m.png',
+			handler: actionsShortcuts
+		}
+	]
+});
+
+var topMenuPlugin = new Ext.menu.Menu ( {
+		id: 'top-menu-plugin',
+		items: [
+			<?php
+				$_plugins = getPluginsMenu();
+				
+				if (is_array($_plugins)) {
+					foreach($_plugins as $plugin) {
+						echo '{text :\''.$plugin['text'].'\',id :\''.$plugin['id'].'\',handler: actionsShortcuts},'."\n\t\t";
+					}
+				}
+				else {
+					echo "
+						{
+							text: 'No plug-ins installed in menu',
+							icon: ' ".$this->get('img')."plugin_add.png'
+						}
+					";
+				}
+			?>
+		]
+	}
+);
+
+var topMenuHelp = new Ext.menu.Menu
+({
+	id: 'top-menu-help',
+	items: 
+	[
+		/*{
+			text: 'Manager settings',
+			icon: '<?php echo $this->get('img')?>tool.png',
+			
+		},
+		{
+			text: 'Server infos',
+			icon: '<?php echo $this->get('img')?>information.png',
+			
+		},
+			'-',*/
+		{
+			text: 'Online support',
+			icon: '<?php echo $this->get('img')?>rescue.png',
+			href: 'http://www.enska-system.com/support/manager/'
+			
+		},
+		{
+			text: 'About...',
+			id: 'win-enskaAbout',
+			icon: '<?php echo $this->get('img')?>help.png',
+			handler: actionsShortcuts
+		}
+	]
+});
+
+var topToolbar = new Ext.Toolbar();
+topToolbar.add
+(
+	/*{
+		text:'File',
+		icon: '<?php echo $this->get('img')?>control_eject_blue_m.png',
+		menu: topMenuFile
+	},*/
+	{
+		text:'Site manager',
+		icon: '<?php echo $this->get('img')?>websites.png',
+		menu: topMenuWebsite
+	},
+	{
+		text:'Core',
+		icon: '<?php echo $this->get('img')?>core_m.png',
+		menu: topMenuCore
+	},
+	{
+		text:'Applications',
+		icon: '<?php echo $this->get('img')?>brick_m.png',
+		menu: topMenuApps
+	},
+	{
+		text:'Users',
+		icon: '<?php echo $this->get('img')?>user_m.png',
+		menu: topMenuUsers
+	},
+	{
+		text:'Plug-in',
+		icon: '<?php echo $this->get('img')?>plugin_m.png',
+		menu: topMenuPlugin
+	},
+	{
+		text:'Help',
+		icon: '<?php echo $this->get('img')?>help_m.png',
+		menu: topMenuHelp
+	}
+);
+
+topToolbar.render('topmenuToolbar');
+
+/*var topPanel=
+{
+	region: 'north',
+	id: 'top-panel',
+	height: 30,
+	items:
+	[
+		topToolbar
+	]
+};*/
+
+var leftPanel = new Ext.tree.TreePanel
+(
+	{
+		id: 'left-panel',
+		width: 200,
+		border: false,
+		autoScroll: true,
+		rootVisible: true,
+		lines: true,
+		singleExpand: false,
+		useArrows: true,
+		animate: true,
+		dataUrl:'?act=loadInterface&lt=Browser',
+		root:
+		{
+			nodeType: 'async',
+			text: '<?php echo $this->get('host'); ?>',
+			id:'node-root',
+			iconCls:'tree-server'
+		},
+		listeners:
+		{
+			render: function()
+			{
+				this.getRootNode().expand();
+			}
+		}
+	}
+);
+
+var browserPanel = new Ext.Panel(
+{
+	title: 'Website\'s browser',
+	region:'west',
+	xtype: 'panel',
+	split: true,
+	collapsible: true,
+	bodyStyle: 'padding-top: 5px; maring-top: 50px',
+	minSize: 200,
+	maxSize: 400,
+	width: 200,
+	autoScroll: true,
+	items:
+	[
+		leftPanel
+	]
+});
+
+leftPanel.on
+(
+	'click', 
+	function(n)
+	{
+		var sn = this.selModel.selNode || {};
+		Ext.getCmp('content-panel').layout.setActiveItem(n.id + '-panel');
+	}
+);
+
+var topPanel = 
+{
+	region:'north',
+	height:65,
+	border:false,
+	collapsible:false,
+	contentEl:'head'
+}
+
+var contentPanel=
+{
+	id: 'content-panel',
+	layout: 'card',
+	region: 'center',
+	border: false,
+	activeItem: 0,
+	items:
+	[start,

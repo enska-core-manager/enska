@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export>
+	<folder name="EnsKa_core-settings">
+		<folder name="groups" />
+		<folder name="acl" />
+		<folder name="rules" />
+	</folder>
+</export>

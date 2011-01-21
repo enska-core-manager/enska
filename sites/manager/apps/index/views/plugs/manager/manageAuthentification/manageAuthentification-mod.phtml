@@ -1,0 +1,280 @@
+var selectedEngine = 'none';
+var conn = new Ext.data.Connection();
+var manageAuthToolbar = new Ext.Toolbar();
+
+var manageAuthMenu = new Ext.menu.Menu ( {
+		items: [ {
+				text: 'Delete',
+				icon: '<?php echo $this->get('img')?>cross.png',
+				handler: confirmDeleteAuth
+			}, 
+				'-',
+			{
+				text: 'Export engine',
+				icon: '<?php echo $this->get('img')?>export.png',
+				handler: confirmExportAuth
+			}
+		]
+	}
+);
+
+manageAuthToolbar.add ( {
+		text: 'Save change',
+		icon: '<?php echo $this->get('img')?>save.png',
+		handler: function() {
+			if(selectedEngine == "none") {
+				msgError('You must select an engine!');
+				return;
+			}
+			
+			var defaultPage = Ext.get('auth-default-page').dom.value;
+			var cookieTime = Ext.get('auth-time').dom.value;
+			var options = Ext.get('auth-options').dom.value;
+			
+			if (cookieTime == '') {
+				cookieTime = 60;
+			}
+			
+			if (defaultPage == '') {
+				defaultPage = 'manager.<?php echo $this->get('domain')?>';
+			}
+			
+			var req = conn.request ( {
+					url: '?act=execPlg&plg=manageAuthentification',
+					method: 'POST',
+					params: "data=" + 'edit::' + selectedEngine + '::' + defaultPage + '::' + cookieTime + '::' + options,
+					success: function(resObj) {
+						if (resObj.responseText != "success") {
+							msgError(resObj.responseText);	
+						}
+					}
+				}
+			);
+		}
+	}, {
+		text: 'Import engine',
+		icon: '<?php echo $this->get('img')?>import.png',
+		handler: uploadEngine
+	}, 
+		'-', 
+	{
+		text: 'Menu',
+		menu: manageAuthMenu
+	}
+);
+
+function uploadEngine()
+{
+	var uploadEngineWizard = new Ext.FormPanel ( {
+			fileUpload: true,
+			width: 400,
+			frame: true,
+			autoHeight: true,
+			bodyStyle: 'padding: 10px 10px 0 10px;',
+			labelWidth: 150,
+			defaults: {
+				anchor: '95%',
+				allowBlank: false,
+				msgTarget: 'side'
+			},
+			items: [ {
+					xtype: 'fileuploadfield',
+					id: 'form-engine',
+					emptyText: 'Select an authentification engine archive...',
+					fieldLabel: 'Engine',
+					name: 'file-engine',
+					buttonText: '...',
+					buttonCfg: {
+						iconCls: 'icon-browse'
+					}
+				}
+			],
+			buttons: [ {
+					text: 'Upload',
+					handler: function() {
+						if(uploadEngineWizard.getForm().isValid()) {
+							uploadEngineWizard.getForm().submit ( {
+									url: '?act=execPlg&plg=manageAuthentification',
+									method: 'POST',
+									params: "data=" + 'import',
+									waitMsg: 'EnsKa Core is uploading the authentification engine...',
+									success: function(uploadEngineWizard, o) {
+										obj = Ext.util.JSON.decode(o.response.responseText);
+										tabMsg = obj.msg.msgInfo.split(';');
+										if (tabMsg[0] != 'err') {
+											winuploadEngine.close();
+											msgOk(tabMsg[0]);
+										}
+										else {
+											msgError(tabMsg[1]);
+										}
+									}
+								}
+							);
+						}
+					}
+				}
+			]
+		}
+	);
+	
+	var winuploadEngine = new Ext.Window ( {
+			closeAction: 'close',
+			layout: 'fit',
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: 'Upload a new authentification engine',
+			width: 600,
+			height: 110,
+			border: false,
+			items: [
+				uploadEngineWizard
+			]
+		}
+	);
+	winuploadEngine.show();
+}
+
+var manageAuthentification = {
+	id: 'manageAuthentification-panel',
+	title: 'EnsKa Core Manager - Manage authentification',
+	autoScroll: true,
+	contentEl: 'manageAuthentification-content',
+	items: [
+		manageAuthToolbar
+	]
+};
+
+var authEngineDataStore = new Ext.data.JsonStore ( {
+		autoDestroy: true,
+		url: '?act=loadInterface&lt=AuthEngine',
+		root: 'items',
+		idProperty: 'engine',
+		fields: ['engine', 'name']
+	}
+);
+
+var combo = new Ext.form.ComboBox ( {
+		id: 'combo-select-auth-engine',
+		name: 'comboSelectAuthEngine',
+		loadingText: 'Loading...',
+		typeAhead: true,
+		hideTrigger: false,
+		triggerAction: 'all',
+		mode: 'remote',
+		emptyText: '     Select an engine...',
+		width: 200,
+		displayField: 'name',
+		valueField: 'engine',
+		store: authEngineDataStore,
+		minChars: 1,
+		applyTo: 'auth-engine',
+		onSelect: function (item) {
+			Ext.getCmp('combo-select-auth-engine').collapse();
+			Ext.getCmp('combo-select-auth-engine').setValue('     ' + item.data.name);
+			selectedEngine = item.data.engine;
+			var authEngine = conn.request ( {
+					url: '?act=loadInterface&lt=GetAuthEngine',
+					method: 'GET',
+					params: "data=" + selectedEngine,
+					success: function(resObj) {
+						var res = resObj.responseText.split(';');
+						Ext.get('auth-default-page').dom.value = res[0];
+						Ext.get('auth-time').dom.value = res[1];
+						Ext.get('auth-options').dom.value = res[2];
+					}
+				}
+			);
+		}
+	}
+);
+
+var req = conn.request ( {
+		url: '?act=loadInterface&lt=GetAuthEngine',
+		method: 'GET',
+		params: "data=start",
+		success: function(resObj) {
+			var res = resObj.responseText.split(';');
+			Ext.get('auth-default-page').dom.value = res[0];
+			Ext.get('auth-time').dom.value = res[1];
+			Ext.getCmp('combo-select-auth-engine').setValue('     ' + res[2]);
+			selectedEngine = res[3];
+			Ext.get('auth-options').dom.value = res[4];
+		}
+	}
+);
+
+function confirmDeleteAuth()
+{
+	if(selectedEngine != 'none') {
+		if (selectedEngine != 'enskaAuth') {
+			Ext.MessageBox.confirm('EnsKa Core Manager','Are you sure you want to delete the selected authentification engine ?', deleteAuth);
+		}
+		else {
+			msgError('You can\'t delete a system authentification engine !');
+		}
+	}
+	else {
+		msgError('You must select an authentification engine !');
+	}
+}
+
+function deleteAuth(btn)
+{
+	if(btn == 'yes') {
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=manageAuthentification',
+				method: 'POST',
+				params: "data=" + 'delete::' + selectedEngine,
+				success: function(resObj) {
+					if (resObj.responseText == "success") {
+						selectedEngine = 'none';
+						Ext.getCmp('combo-select-auth-engine').setValue('');
+						Ext.get('auth-default-page').dom.value = '';
+						Ext.get('auth-time').dom.value = '';
+						Ext.get('auth-options').dom.value = '';
+					}
+					else {
+						msgError(resObj.responseText);
+					}
+				}
+			}
+		);
+	}
+}
+
+function confirmExportAuth()
+{
+	if(selectedEngine != 'none') {
+		if (selectedEngine != 'enskaAuth') {
+			Ext.MessageBox.confirm('EnsKa Core Manager','Are you sure you want to export the selected authentification engine ?', exportAuth);
+		}
+		else {
+			msgError('You can\'t export a system authentification engine !');
+		}
+	}
+	else {
+		msgError('You must select an authentification engine !');
+	}
+}
+
+function exportAuth(btn)
+{
+	if(btn == 'yes') {
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=manageAuthentification',
+				method: 'POST',
+				params: "data=" + 'export::' + selectedEngine,
+				success: function(resObj) {
+					if (resObj.responseText == "success") {
+						msgOk('Authentification engine has been exported !');
+					}
+					else {
+						msgError(resObj.responseText);
+					}
+				}
+			}
+		);
+	}
+}

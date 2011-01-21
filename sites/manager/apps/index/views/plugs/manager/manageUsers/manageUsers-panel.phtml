@@ -1,0 +1,133 @@
+
+<div id="manageUsers-content">
+	<div id="usersGridRender"></div>
+	<div id="manageUserEdit">
+		<div id="cbg" style="background-color: transparent; border: 0px lightblue solid;">
+			<table width="100%" cellspacing="2">
+				<tr>
+					<td width="50%" valign="top">
+						<div id="mhead" style="width: 100%; border-bottom: 1px lightblue solid;">
+							<table cellpadding=0 cellspacing=0 border=0>
+								<tr>
+									<td width=20><?php $this->image('user_yellow_information.png'); ?></td>
+									<td>User basic's informations</td>
+								</tr>
+							</table>
+						</div>
+					</td>
+					<td width="50%" valign="top">
+						<div id="mhead" style="border-bottom: 1px lightblue solid;">
+							<table cellpadding=0 cellspacing=0 border=0>
+								<tr>
+									<td width=20><?php $this->image('vcard.png'); ?></td>
+									<td>User expanded informations</td>
+								</tr>
+							</table>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td valign="top">
+						<table>
+							<tr>
+								<td><h5>UID :<br><small style="color: lightgray;"></h5></td>
+								<td>
+									<input type="text" class="textbox" name="uUid" id="u-uid" maxlength="11" readOnly>
+								</td>
+							</tr>
+							<tr><td></td></tr>
+							<tr>
+								<td><h5>Login :</h5></td>
+								<td>
+									<input type="text" class="textbox" name="uLogin" id="u-login" maxlength="50">
+								</td>
+							</tr>
+							<tr><td></td></tr>
+							<tr>
+								<td valign=top><h5>E-Mail :<br></h5></td>
+								<td>
+									<input type="text" class="textbox" name="uMail" id="u-mail" maxlength="100">
+								</td>
+							</tr>
+							<tr><td></td></tr>
+							<tr>
+								<td valign=top><h5>Password :<br><small style="color: lightgray;">(fill to change)</small></h5></td>
+								<td>
+									<input type="text" class="textbox" name="uPassword" id="u-password" maxlength="20">
+								</td>
+							</tr>
+						</table>
+					</td>
+					<td valign="top">
+						<table>
+							<tr>
+								<td><h5>First name :<br><small style="color: lightgray;"></h5></td>
+								<td>
+									<input type="text" class="textbox" name="uFirst" id="u-first" maxlength="100">
+								</td>
+							</tr>
+							<tr><td></td></tr>
+							<tr>
+								<td><h5>Last :</h5></td>
+								<td>
+									<input type="text" class="textbox" name="uLast" id="u-last" maxlength="100">
+								</td>
+							</tr>
+							<tr><td></td></tr>
+							<?php
+								$properties = getUserProperties();
+								$nb = count($properties);
+								$i = 0;
+								while ($i < $nb)
+								{
+									echo '<tr><td></td><tr>'."\n";
+									echo '<tr>'."\n";
+									echo '<td><h5>'.ucfirst($properties[$i]).' :</h5></td>'."\n";
+									echo '<td>'."\n\t";
+									echo '<input type="text" class="textbox" name="u'.$properties[$i].'" id="u-'.$properties[$i].'">'."\n";
+									echo '</td>'."\n";
+									echo '</tr>'."\n";
+									
+									$i++;
+								}
+							?>
+						</table>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<br>
+		<div id="cbg" style="background-color: transparent; border: 0px lightblue solid;">
+			<table width="100%" cellspacing="2">
+				<tr>
+					<td width="50%" valign="top">
+						<div id="mhead" style="width: 100%; border-bottom: 1px lightblue solid;">
+							<table cellpadding=0 cellspacing=0 border=0>
+								<tr>
+									<td width=20><?php $this->image('users.png'); ?></td>
+									<td>User's groups</td>
+								</tr>
+							</table>
+						</div>
+					</td>
+				</tr>
+				<tr><td><br></td></tr>
+				<tr>
+					<td>
+						<center><table>
+							<tr>
+								<td>
+									<div id="renderPlateformUsers"></div>
+								</td>
+								<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+								<td>
+									<div id="renderUserGroups"></div>
+								</td>
+							</tr>
+						</table></center>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</div>

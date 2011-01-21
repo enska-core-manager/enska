@@ -1,0 +1,8 @@
+AuthUserFile %pathAuth%.passws
+AuthGroupFile /dev/null
+AuthName "%name% WEB-Services"
+AuthType Basic
+
+<files %name%_server_api.php>
+	Require valid-user
+</files>

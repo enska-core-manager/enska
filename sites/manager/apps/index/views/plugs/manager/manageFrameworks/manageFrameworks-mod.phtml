@@ -1,0 +1,927 @@
+var count_aff_frameworkEditor = 0;
+var conn = new Ext.data.Connection();
+var manageFrameworksToolbar = new Ext.Toolbar();
+var structureToolbar = new Ext.Toolbar();
+
+var manageFrameworkStructureMenu = new Ext.menu.Menu ( {
+		items: [ {
+				text: 'Create a new file',
+				icon: '<?php echo $this->get('img')?>page_white_add.png',
+				handler: createNewFrameworkFile
+			}, {
+				text: 'Upload a content file',
+				icon: '<?php echo $this->get('img')?>page_white_put.png',
+				handler: uploadNewFrameworkFile
+			}
+		]
+	}
+);
+
+structureToolbar.add ( {
+		text: 'Delete',
+		icon: '<?php echo $this->get('img')?>cross.png',
+		handler: confirmDeleteFrameworkContentFile
+	}, {
+		text:'Structure',
+		icon: '<?php echo $this->get('img')?>chart_curve.png',
+		menu: manageFrameworkStructureMenu
+	}, {
+		text:'Schemas',
+		icon: '<?php echo $this->get('img')?>chart_organisation.png',
+		handler: frameworkSchemasEditor
+	}, {
+		text: 'Upload source',
+		icon: '<?php echo $this->get('img')?>package_green.png',
+		handler: uploadFrameworkSource
+	}
+);
+
+var manageFrameworksEditorMainMenu = new Ext.menu.Menu ( {
+		id: 'manage-framework-editor-main-menu',
+		items: [ {
+				text: 'Delete',
+				icon: '<?php echo $this->get('img')?>cross.png',
+				handler: confirmDeleteFramework
+			},
+				'-', {
+				text: 'Export',
+				icon: '<?php echo $this->get('img')?>export.png',
+				handler: confirmExportFramework
+			}
+		]
+	}
+);
+
+manageFrameworksToolbar.add ( {
+		text:'Save',
+		tooltip: 'Save modifications',
+		icon: '<?php echo $this->get('img')?>save.png',
+		handler: function() {
+		
+			var loader = Ext.get('manage-framework-loader').dom.value;
+			var	dplName = Ext.get('manage-framework-dplName').dom.value;
+			var version = Ext.get('manage-framework-version').dom.value;
+			var revision = Ext.get('manage-framework-revision').dom.value;
+
+			var str = loader;
+			var toreplace = "::";
+			var replaceby = ":-:";
+			while(str.indexOf(toreplace) > -1) {
+				str = str.replace(toreplace,replaceby)
+			}
+			loader = str;
+			
+			var req = conn.request ( {
+					url: '?act=execPlg&plg=manageFrameworks',
+					method: 'POST',
+					params: "data=" + 'editByEditor::' + dplName + '::' + version + '::' + revision + '::' + loader + '::' + frameworkListingEditorGrid.selModel.getSelected().json.id_name,
+					success: function(resObj) {
+						if (resObj.responseText == "success") {
+							frameworksPanelDataStore.reload();
+						}
+						else {
+							msgError(resObj.responseText);
+						}
+					}
+				}
+			);
+		}
+	},
+		'-', {
+		text:'Menu',
+		menu: manageFrameworksEditorMainMenu
+	}
+);
+
+var manageFrameworks = {
+	id: 'manageFrameworks-panel',
+	title: 'EnsKa Core Manager - Manage frameworks',
+	contentEl: 'manageFrameworks-content',
+	autoScroll: true,
+	items: [
+		manageFrameworksToolbar
+	]
+};
+
+var frameworksPanelDataStore = new Ext.data.Store ( {
+		id: 'frameworks-datastore',
+		proxy: new Ext.data.HttpProxy ( {
+				url:'?act=loadInterface&lt=FrameworksGrid'
+			}
+		),
+		reader: new Ext.data.JsonReader ( {
+				root: 'results',
+				totalProperty: 'total',
+				id: 'id'
+			}, [ 
+				{name: 'IDFramework', type: 'int', mapping: 'id'},
+				{name: 'DPLName', type: 'string', mapping: 'name'},
+				{name: 'IDName', type: 'string', mapping: 'id_name'},
+				{name: 'Version', type: 'string', mapping: 'version'},
+				{name: 'Revision', type: 'int', mapping: 'revision'},
+				{name: 'Link', type: 'string', mapping: 'revision'}
+			]
+		),
+		sortInfo: {
+			field: 'IDFramework',
+			direction: "ASC"
+		}
+	}
+);
+
+var frameworksColumnModel = new Ext.grid.ColumnModel ( [ {
+			header: '#',
+			readOnly: true,
+			dataIndex: 'IDFramework',
+			width: 25
+		}, {
+			header: 'Display name',
+			dataIndex: 'DPLName',
+			width: 300,
+			editor: new Ext.form.TextField ( {
+					allowBlank: false,
+					maxLength: 20,
+					maskRe: /([a-zA-Z0-9\s]+)$/
+				}
+			)
+		}, {
+			header: 'ID name',
+			dataIndex: 'IDName',
+			readOnly: true,
+			width: 200
+		}, {
+			header: 'Version',
+			dataIndex: 'Version',
+			width: 150,
+			readOnly: true
+		}
+	]
+);
+frameworksColumnModel.defaultSortable = true;
+
+var frameworkListingEditorGrid =  new Ext.grid.EditorGridPanel ( {
+		id: 'frameworkListingEditorGrid',
+		store: frameworksPanelDataStore,
+		cm: frameworksColumnModel,
+		enableColLock:false,
+		clicksToEdit:2,
+		selModel: new Ext.grid.RowSelectionModel ( {
+				singleSelect: true
+			}
+		),
+		height: 300,
+		anchor:'95%',
+		stateful: false
+	}
+);
+
+var structureDataStore = new Ext.data.Store ( {
+		id: 'structure-datastore',
+		proxy: new Ext.data.HttpProxy ( {
+				url:'?act=loadInterface&lt=FrameworksStructureGrid'
+			}
+		),
+		reader: new Ext.data.JsonReader ( {
+				root: 'results',
+				totalProperty: 'total',
+				id: 'id'
+			}, [
+				{name: 'ID', type: 'int', mapping: 'id'},
+				{name: 'File', type: 'string', mapping: 'file'}
+			]
+		),
+		sortInfo: {
+			field: 'ID', 
+			direction: "ASC"
+		}
+	}
+);
+
+var structureColumnModel = new Ext.grid.ColumnModel ( [ {
+			header: 'File',
+			dataIndex: 'File',
+			width: 1500,
+			readOnly: true,
+			editor: new Ext.form.TextField ( {
+				  allowBlank: false
+				}
+			)
+		}
+	]
+);
+structureColumnModel.defaultSortable = true;
+
+var structureListingEditorGrid =  new Ext.grid.GridPanel ( {
+		id: 'structureListingEditorGrid',
+		store: structureDataStore,
+		cm: structureColumnModel,
+		enableColLock:false,
+		height: 200,
+		border: false,
+		anchor:'100%',
+		stateful: false
+	}
+);
+
+function uploadFrameworkSource()
+{
+	var uploadFrameworkSourceWizard = new Ext.FormPanel ( {
+			fileUpload: true,
+			width: 400,
+			frame: true,
+			autoHeight: true,
+			bodyStyle: 'padding: 10px 10px 0 10px;',
+			labelWidth: 150,
+			defaults: {
+				anchor: '95%',
+				allowBlank: false,
+				msgTarget: 'side'
+			},
+			items: [ {
+					xtype: 'fileuploadfield',
+					id: 'form-file-sourceFileFramework',
+					emptyText: 'Select a framework source archive...',
+					fieldLabel: 'Framework source',
+					name: 'file-sourceFramework',
+					buttonText: '...',
+					buttonCfg: {
+						iconCls: 'icon-browse'
+					}
+				}
+			],
+			buttons: [ {
+					text: 'Upload',
+					handler: function() {
+						if(uploadFrameworkSourceWizard.getForm().isValid()) {
+							uploadFrameworkSourceWizard.getForm().submit ( {
+									url: '?act=execPlg&plg=manageFrameworks',
+									method: 'POST',
+									params: "data=" + 'importSource::' + frameworkListingEditorGrid.selModel.getSelected().json.id_name,
+									waitMsg: 'EnsKa Core is uploading the framework source...',
+									success: function(uploadFrameworkSourceWizard, o) {
+										obj = Ext.util.JSON.decode(o.response.responseText);
+										tabMsg = obj.msg.msgInfo.split(';');
+										if (tabMsg[0] != 'err') {
+											winuploadFrameworkSource.close();
+											msgOk(tabMsg[0]);
+										}
+										else {
+											msgError(tabMsg[1]);
+										}
+									}
+								}
+							);
+						}
+					}
+				}
+			]
+		}
+	);
+	
+	var winuploadFrameworkSource = new Ext.Window ( {
+			closeAction: 'close',
+			layout: 'fit',
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: 'Upload a new framework source',
+			width: 600,
+			height: 110,
+			border: false,
+			items: [
+				uploadFrameworkSourceWizard
+			]
+		}
+	);
+	winuploadFrameworkSource.show();
+}
+
+var manageFrameworkWizard =  {
+	xtype:'tabpanel',
+	id: 'manage-framework-wizard',
+	plain: false,
+	border: false,
+	height: 270,
+	deferredRender: false,
+	defaults:{bodyStyle:'padding:0px'},
+	contentEl: 'manageFrameworkEditStart',
+	items: [ {
+			title:'Basics informations',
+			id: 'manage-framework-informations-form',
+			iconCls:'icon-infos',
+			layout:'form',
+			xtype: 'form',
+			html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -125px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>framework_b.png" width=128 height=128></div>',
+			defaults: {width: 230},
+			bodyStyle: 'padding-left: 230px; padding-top: 50px;',
+			items: [ {
+					id:'manage-framework-dplName',
+					fieldLabel: 'Display name',
+					anchor:'95%',
+					xtype: 'textfield',
+					minLength: 3,
+					maxLength: 100,
+					minLengthText: 'Display name must be at least 3 characters long.',
+					maxLengthText: 'Display name must not be bigger than 100 characters long.',
+					blankText: 'You must give a Display name',
+					allowBlank:false
+				}, {
+					id:'manage-framework-idName',
+					fieldLabel: 'ID name',
+					xtype: 'textfield',
+					anchor:'95%',
+					readOnly:true
+				}, {
+					id:'manage-framework-revision',
+					fieldLabel: 'Revision',
+					xtype: 'textfield',
+					anchor:'95%',
+					readOnly:true
+				}, {
+					id:'manage-framework-version',
+					fieldLabel: 'Version',
+					xtype: 'textfield',
+					anchor:'95%',
+				}
+			]
+		}, {
+			cls:'x-plain',
+			title:'Loader',
+			iconCls:'icon-page-white-php',
+			layout:'form',
+			bodyStyle: 'padding-top: 15px; padding: 15px;',
+			items: [ 
+				new Ext.form.TextArea ( {
+						id:'manage-framework-loader',
+						wrap:'off',
+						width: 460,
+						height: 250,
+						anchor:'95%',
+						fieldLabel: 'Loader source'
+					}
+				)
+			]
+		}, {
+			cls:'x-plain',
+			title:'Structure',
+			iconCls:'icon-sitemap-color',
+			layout:'form',
+			items: [
+				structureToolbar,
+				structureListingEditorGrid
+			]
+		}
+	]
+};
+
+var fEditor = new Ext.Panel ( {
+		id: 'frameworkEditor',
+		height: 300,
+		border: false,
+		items: [
+			manageFrameworkWizard
+		]
+	}
+);
+
+fEditor.render('frameworkEditorRender');
+frameworksPanelDataStore.load();
+frameworkListingEditorGrid.render('frameworksGridRender');
+
+function saveGridFramework(oGrid_event)
+{
+	var idFramework = oGrid_event.record.data.IDFramework;
+	var	dplName = oGrid_event.record.data.DPLName;
+	var	idName = oGrid_event.record.data.IDName;
+	var	version = oGrid_event.record.data.Version;
+	var	revision = oGrid_event.record.data.Revision;
+	
+	var req = conn.request ( {
+			url: '?act=execPlg&plg=manageFrameworks',
+			method: 'POST',
+			params: "data=" + 'editByGrid::' + idFramework + '::' + dplName + '::' + idName + '::' + version + '::' + revision,
+			success: function(resObj) {
+				if (resObj.responseText == "success") {
+					frameworksPanelDataStore.commitChanges();
+					frameworksPanelDataStore.reload();
+				}
+				else {
+					msgError(resObj.responseText);
+					frameworksPanelDataStore.reload();
+				}
+			}
+		}
+	);	
+}
+
+function createNewFrameworkFile()
+{
+	var createNewFrameworkFileWizard = {
+		plain: false,
+		height:235,
+		deferredRender: false,
+		id: 'new-framworkfile-informations-form',
+		iconCls:'icon-infos',
+		layout:'form',
+		xtype: 'form',
+		html: '<div style="padding: 5px; background: white; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -90px; left: -200px; position: relative;"><img src="ressources/sites/manager/index/images/file_add_b.png" width=128 height=128></div>',
+		defaults: {width: 230},
+		bodyStyle: 'padding-left: 200px; padding-top: 80px;',
+		items: [ {
+				id:'new-frameworkfile-name',
+				fieldLabel: 'Name',
+				anchor:'95%',
+				xtype: 'textfield',
+				minLength: 3,
+				maxLength: 50,
+				minLengthText: 'The file name must be at least 3 characters long.',
+				maxLengthText: 'The file name must not be bigger than 20 characters long.',
+				blankText: 'You must give a file name',
+				allowBlank:false
+			}
+		],
+		buttons: [ {
+				text: 'Create',
+				handler: function() {
+					var name = Ext.get('new-frameworkfile-name').dom.value;
+					msgWait('EnsKa Core is creating the new file ' + name +'...');
+					var req = conn.request ( {
+							url: '?act=execPlg&plg=manageFrameworks',
+							method: 'POST',
+							params: "data=" + 'createContentFile::' + name + '::' + frameworkListingEditorGrid.selModel.getSelected().json.id_name,
+							success: function(resObj) {
+								if (resObj.responseText == 'success') {
+									msgOk('The file ' + name + ' has been created !');
+									var	contentsLoader = '?act=loadInterface&lt=FrameworksStructureGrid&data=' + frameworkListingEditorGrid.selModel.getSelected().json.id_name;
+									structureDataStore.proxy.conn.url = contentsLoader;
+									structureDataStore.reload();
+									wincreateNewFrameworkFile.close();
+								}
+								else {
+									msgError(resObj.responseText);
+								}
+							}
+						}
+					);
+				}
+			}, {
+				text: 'Cancel',
+				handler: function() {
+					wincreateNewFrameworkFile.close();
+				}
+			}
+		]
+	};
+	
+	var wincreateNewFrameworkFile = new Ext.Window ( {
+			closeAction: 'close',
+			layout: 'fit',
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: 'Create a new framework content file',
+			width: 600,
+			height: 250,
+			border: false,
+			items: [
+				createNewFrameworkFileWizard
+			]
+		}
+	);
+	wincreateNewFrameworkFile.show();
+}
+
+function uploadNewFrameworkFile()
+{
+	var uploadNewFrameworkFileWizard = new Ext.FormPanel ( {
+			fileUpload: true,
+			width: 400,
+			frame: true,
+			autoHeight: true,
+			bodyStyle: 'padding: 10px 10px 0 10px;',
+			labelWidth: 150,
+			defaults: {
+				anchor: '95%',
+				allowBlank: false,
+				msgTarget: 'side'
+			},
+			items: [ {
+					xtype: 'fileuploadfield',
+					id: 'form-fileContentFileFramework',
+					emptyText: 'Select a framework content file...',
+					fieldLabel: 'Framework content file',
+					name: 'file-contentFramework',
+					buttonText: '...',
+					buttonCfg: {
+						iconCls: 'icon-browse'
+					}
+				}
+			],
+			buttons: [ {
+					text: 'Upload',
+					handler: function() {
+						if(uploadNewFrameworkFileWizard.getForm().isValid()) {
+							uploadNewFrameworkFileWizard.getForm().submit ( {
+									url: '?act=execPlg&plg=manageFrameworks',
+									method: 'POST',
+									params: "data=" + 'importContentFile::' + frameworkListingEditorGrid.selModel.getSelected().json.id_name,
+									waitMsg: 'EnsKa Core is uploading the content file...',
+									success: function(uploadNewFrameworkFileWizard, o) {
+										obj = Ext.util.JSON.decode(o.response.responseText);
+										tabMsg = obj.msg.msgInfo.split(';');
+										if (tabMsg[0] != 'err') {
+											var	contentsLoader = '?act=loadInterface&lt=FrameworksStructureGrid&data=' + frameworkListingEditorGrid.selModel.getSelected().json.id_name;
+											structureDataStore.proxy.conn.url = contentsLoader;
+											structureDataStore.reload();
+											winuploadNewFrameworkFile.close();
+										}
+										else {
+											msgError(tabMsg[1]);
+										}
+									}
+								}
+							);
+						}
+					}
+				}
+			]
+		}
+	);
+	
+	var winuploadNewFrameworkFile = new Ext.Window ( {
+			closeAction: 'close',
+			layout: 'fit',
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: 'Upload a new framework content file',
+			width: 600,
+			height: 110,
+			border: false,
+			items: [
+				uploadNewFrameworkFileWizard
+			]
+		}
+	);
+	winuploadNewFrameworkFile.show();
+}
+
+function confirmDeleteFramework()
+{
+	if(frameworkListingEditorGrid.selModel.getCount() == 1) {
+		if (frameworkListingEditorGrid.selModel.getSelected().json.id == 1) {
+			Ext.Msg.show({title:'EnsKa Core Manager',msg: 'You can\'t delete a system framework!',buttons: Ext.Msg.OK,icon: Ext.MessageBox.WARNING,});
+		}
+		else {
+			Ext.MessageBox.confirm('EnsKa Core Manager','Some websites and applications have risk to don\'t work correctly any more<br>Are you sure you want to delete the framework ' + frameworkListingEditorGrid.selModel.getSelected().json.name + ' ?', deleteFramework);
+		}
+	}
+	else {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select a framework!');
+	}
+}
+
+function deleteFramework(btn)
+{
+	if(btn == 'yes') {
+		var selections = frameworkListingEditorGrid.selModel.getSelections();
+		var frameworks = new Array();
+		
+		for(i = 0; i < frameworkListingEditorGrid.selModel.getCount(); i++) {
+			frameworks.push(selections[i].json.id);
+		}
+		
+		var encoded_array = frameworks;
+		
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=manageFrameworks',
+				method: 'POST',
+				params: "data=" + 'delete::' + encoded_array,
+				success: function(resObj) {
+					if (resObj.responseText == "success") {
+						resetFrameworkEditor();
+						frameworksPanelDataStore.reload();
+					}
+					else {
+						msgError(resObj.responseText);
+						frameworksPanelDataStore.reload();
+					}
+				}
+			}
+		);
+		
+	} 
+}
+
+function confirmDeleteFrameworkContentFile()
+{
+	if(frameworkListingEditorGrid.selModel.getCount() == 1) {
+		if(structureListingEditorGrid.selModel.getCount() == 1) {
+			Ext.MessageBox.confirm('EnsKa Core Manager','Are you sure you want to delete the content file ' + structureListingEditorGrid.selModel.getSelected().json.file + ' ?', deleteFrameworkContentFile);
+		}
+		else {
+			Ext.MessageBox.alert('EnsKa Core Manager','You must select a content file!');
+		}
+	}
+	else {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select a framework!');
+	}
+}
+
+function deleteFrameworkContentFile(btn)
+{
+	if(btn == 'yes') {
+		var selections = structureListingEditorGrid.selModel.getSelections();
+		var files = new Array();
+		var	framework = frameworkListingEditorGrid.selModel.getSelected().json.id_name;
+		
+		for(i = 0; i < structureListingEditorGrid.selModel.getCount(); i++) {
+			files.push(selections[i].json.file);
+		}
+		var encoded_array = files;
+		
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=manageFrameworks',
+				method: 'POST',
+				params: "data=" + 'deleteContentFile::' + encoded_array + '::' + framework,
+				success: function(resObj) {
+					if (resObj.responseText == "success") {
+						var	contentsLoader = '?act=loadInterface&lt=FrameworksStructureGrid&data=' + frameworkListingEditorGrid.selModel.getSelected().json.id_name;
+						structureDataStore.proxy.conn.url = contentsLoader;
+						structureDataStore.reload();
+					}
+					else {
+						msgError(resObj.responseText);
+					}
+				}
+			}
+		);
+		
+	}
+}
+
+function confirmExportFramework()
+{
+	if(frameworkListingEditorGrid.selModel.getCount() == 1) {
+		if (frameworkListingEditorGrid.selModel.getSelected().json.id == 1){
+			Ext.Msg.show({title:'EnsKa Core Manager',msg: 'You can\'t export a system framework!',buttons: Ext.Msg.OK,icon: Ext.MessageBox.WARNING,});
+		}
+		else {
+			Ext.MessageBox.confirm('EnsKa Core Manager','Are you sure you want to export ' + frameworkListingEditorGrid.selModel.getSelected().json.name + ' ?', exportFramework);
+		}
+	}
+	else {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select a framework!');
+	}
+}
+
+function exportFramework(btn)
+{
+	if(btn == 'yes') {
+		msgWait('EnsKa Core is exporting the framework ' + frameworkListingEditorGrid.selModel.getSelected().json.name +'...');
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=manageFrameworks',
+				method: 'POST',
+				params: "data=" + 'export::' + frameworkListingEditorGrid.selModel.getSelected().json.id_name,
+				success: function(resObj) {
+					if (resObj.responseText == "success") {
+						msgOk('The framework has been exported!');
+					}
+					else {
+						msgError(resObj.responseText);
+					}
+				}
+			}
+		);
+	} 
+}
+
+function fillFrameworkEditor()
+{	
+	if (count_aff_frameworkEditor == 0) {
+		Ext.getCmp('manage-framework-wizard').activate('manage-framework-informations-form');
+		count_aff_frameworkEditor++;
+	}
+	
+	Ext.get('manage-framework-dplName').dom.value = frameworkListingEditorGrid.selModel.getSelected().json.name;
+	Ext.get('manage-framework-idName').dom.value = frameworkListingEditorGrid.selModel.getSelected().json.id_name;
+	Ext.get('manage-framework-version').dom.value = frameworkListingEditorGrid.selModel.getSelected().json.version;
+	Ext.get('manage-framework-revision').dom.value = frameworkListingEditorGrid.selModel.getSelected().json.revision;
+	
+	var	contentsLoader = '?act=loadInterface&lt=FrameworksStructureGrid&data=' + frameworkListingEditorGrid.selModel.getSelected().json.id_name;
+	structureDataStore.proxy.conn.url = contentsLoader;
+	structureDataStore.reload();
+	
+	var fillLoader = conn.request ( {
+			url: '?act=loadInterface&lt=GetFrameworkLoader',
+			method: 'GET',
+			params: "data=" + frameworkListingEditorGrid.selModel.getSelected().json.id_name,
+			success: function(resObj) {
+				Ext.get('manage-framework-loader').dom.value = resObj.responseText;
+			}
+		}
+	);
+}
+
+function resetFrameworkEditor()
+{	
+	Ext.get('manage-framework-dplName').dom.value = "";
+	Ext.get('manage-framework-idName').dom.value = "";
+	Ext.get('manage-framework-version').dom.value = "";
+	Ext.get('manage-framework-revision').dom.value = "";
+	Ext.get('manage-framework-loader').dom.value = "";
+	structureDataStore.removeAll();
+}
+
+function showEditorContentFile()
+{
+	var contentFile = new Ext.form.TextArea ( {
+			id:'framework-contentFile-editor',
+			wrap:'off',
+			anchor:'95%'
+		}
+	);
+	
+	var file = structureListingEditorGrid.selModel.getSelected().json.file;
+	var	frameworkName = frameworkListingEditorGrid.selModel.getSelected().json.name;
+	
+	var getContentFile = conn.request ( {
+			url: '?act=loadInterface&lt=GetFrameworkContentFile',
+			method: 'GET',
+			params: "data=" + frameworkListingEditorGrid.selModel.getSelected().json.id_name + '::' + file,
+			success: function(resObj) {
+				Ext.get('framework-contentFile-editor').dom.value = resObj.responseText;
+			}
+		}
+	);
+	
+	var contentFileEditor = new Ext.Window ( {
+			closeAction: 'close',
+			layout: 'fit',
+			modal: true,
+			resizable: true,
+			maximizable: true,
+			closable: true,
+			title: 'Content file editor - ' + frameworkName + ' | ' + file,
+			width: 800,
+			height: 600,
+			border: false,
+			items: [
+				contentFile
+			],
+			buttons: [ {
+					text: 'Save',
+					id: 'framework-contentFile-editor-save-btn',
+					handler: function() {
+						var content = Ext.get('framework-contentFile-editor').dom.value;
+						var	framework = frameworkListingEditorGrid.selModel.getSelected().json.id_name;
+						
+						var req = conn.request ( {
+								url: '?act=execPlg&plg=manageFrameworks',
+								method: 'POST',
+								params: "data=" + 'editContentFile::' + content + '::' + file + '::' + framework,
+								success: function(resObj) {
+									if (resObj.responseText == 'success') {
+										contentFileEditor.close();
+									}
+									else {
+										msgError(resObj.responseText);
+										contentFileEditor.close();
+									}
+								}
+							}
+						);
+					}
+				}, {
+					text: 'Cancel',
+					handler: function() {
+						contentFileEditor.close();
+					}
+				}
+			]
+		}
+	);
+	contentFileEditor.show();
+}
+
+function frameworkSchemasEditor()
+{
+	var schemasEditorWizard = {
+		xtype:'tabpanel',
+		id: 'shemas-editor-wizard',
+		plain: false,
+		border: false,
+		anchor:'95%',
+		height: 600,
+		activeTab: 0,
+		deferredRender: false,
+		items: [  {
+				title:'Website',
+				id: 'framework-site-schema-editor-form',
+				iconCls:'icon-infos',
+				layout:'form',
+				xtype: 'form',
+				items: [ 
+					new Ext.form.TextArea ( {
+							id:'framework-site-schema-editor',
+							wrap:'off',
+							anchor:'100%',
+							height: 510,
+							fieldLabel: 'Website'
+						}
+					)
+				]
+			}, {
+				title:'Application',
+				id: 'framework-app-schema-editor-form',
+				iconCls:'icon-infos',
+				layout:'form',
+				xtype: 'form',
+				items: [ 
+					new Ext.form.TextArea ( {
+							id:'framework-app-schema-editor',
+							wrap:'off',
+							anchor:'100%',
+							height: 510,
+							fieldLabel: 'Application'
+						}
+					)
+				]
+			}
+		]
+	}
+	
+	var	frameworkName = frameworkListingEditorGrid.selModel.getSelected().json.name;
+	var	framework = frameworkListingEditorGrid.selModel.getSelected().json.id_name;
+	
+	var getSiteSchema = conn.request ( {
+			url: '?act=loadInterface&lt=GetFrameworkSiteSchema',
+			method: 'GET',
+			params: "data=" + framework,
+			success: function(resObj) {
+				Ext.get('framework-site-schema-editor').dom.value = resObj.responseText;
+			}
+		}
+	);
+	
+	var getApppSchema = conn.request ( {
+			url: '?act=loadInterface&lt=GetFrameworkApplicationSchema',
+			method: 'GET',
+			params: "data=" + framework,
+			success: function(resObj) {
+				Ext.get('framework-app-schema-editor').dom.value = resObj.responseText;
+			}
+		}
+	);
+	
+	var frameworkSchemasEditor = new Ext.Window ( {
+			closeAction: 'close',
+			layout: 'fit',
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: 'Schemas editor - ' + frameworkName,
+			width: 800,
+			height: 600,
+			border: false,
+			items: [
+				schemasEditorWizard
+			],
+			buttons: [ {
+					text: 'Save',
+					id: 'framework-contentFile-editor-save-btn',
+					handler: function() {
+						var siteSchema = Ext.get('framework-site-schema-editor').dom.value;
+						var appSchema = Ext.get('framework-app-schema-editor').dom.value;
+						
+						var req = conn.request ( {
+								url: '?act=execPlg&plg=manageFrameworks',
+								method: 'POST',
+								params: "data=" + 'editSchemas::' + siteSchema + '::' + appSchema + '::' + framework,
+								success: function(resObj) {
+									if (resObj.responseText == 'success') {
+										frameworkSchemasEditor.close();
+									}
+									else {
+										msgError(resObj.responseText);
+										frameworkSchemasEditor.close();
+									}
+								}
+							}
+						);
+					}
+				}, {
+					text: 'Cancel',
+					handler: function() {
+						frameworkSchemasEditor.close();
+					}
+				}
+			]
+		}
+	);
+	frameworkSchemasEditor.show();
+}
+
+frameworkListingEditorGrid.on('afteredit', saveGridFramework);
+frameworkListingEditorGrid.on('rowClick', fillFrameworkEditor);
+structureListingEditorGrid.on('rowdblclick', showEditorContentFile);

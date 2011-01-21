@@ -1,0 +1,42 @@
+var conn = new Ext.data.Connection();
+var manageCoreToolbar = new Ext.Toolbar();
+
+manageCoreToolbar.add ( {
+		text:'Save',
+		tooltip: 'Save modifications',
+		icon: '<?php echo $this->get('img')?>save.png',
+		handler: function() {
+			var config = Ext.get('manage-core-settings').dom.value;
+			
+			var req = conn.request ( {
+					url: '?act=execPlg&plg=manageCore',
+					method: 'POST',
+					params: "data=" + 'edit::' + config,
+					success: function(resObj) {
+						if (resObj.responseText != "success") {
+							msgError(resObj.responseText);
+						}
+					}
+				}
+			);
+		}
+	}, {
+		text:'Reload settings',
+		tooltip: 'Reload the core settings',
+		icon: '<?php echo $this->get('img')?>reload.png',
+		handler: function() {
+			fillCoreSettings();
+		}
+	}
+);
+
+var manageCore = {
+	id: 'manageCore-panel',
+	title: 'EnsKa Core Manager - Core settings',
+	autoScroll: true,
+	contentEl: 'manageCore-content',
+	autoScroll: true,
+	items: [
+		manageCoreToolbar
+	]
+};

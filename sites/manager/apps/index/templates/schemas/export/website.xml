@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export>
+	<folder name="%idName%">
+		<folder name="plugs">
+			<folder name="views" />
+			<folder name="models" />
+		</folder>
+		<folder name="website" />
+		<folder name="ressources" />
+		<file name="%idName%.ini" />
+	</folder>
+</export>

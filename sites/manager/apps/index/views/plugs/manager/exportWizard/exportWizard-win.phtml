@@ -1,0 +1,1018 @@
+if (obj.id == "win-exportWizard")
+{
+	function exportPanel()
+	{
+		var eWebsitesDataStore = new Ext.data.JsonStore ( {
+				autoDestroy: true,
+				url: '?act=loadInterface&lt=WebsiteData',
+				root: 'items',
+				idProperty: 'id',
+				fields: ['id', 'dpl_name', 'id_name']
+			}
+		);
+
+		var selectedWebsite = 'none';
+		var comboExportWebsites = new Ext.form.ComboBox ( {
+				id: 'combo-select-export-website',
+				name: 'comboSelectExportWebsite',
+				loadingText: 'Loading...',
+				typeAhead: true,
+				hideTrigger: false,
+				triggerAction: 'all',
+				mode: 'remote',
+				emptyText: 'Select a website...',
+				width: 200,
+				displayField: 'dpl_name',
+				valueField: 'id',
+				store: eWebsitesDataStore,
+				minChars: 1,
+				onSelect: function (item) {
+					Ext.getCmp('combo-select-export-website').collapse();
+					Ext.getCmp('combo-select-export-website').setValue(item.data.dpl_name);
+					selectedWebsite = item.data.id;
+				}
+			}
+		);
+		
+		var exportWebsites = new Ext.FormPanel ( {
+				id: 'export-website',
+				border: false,
+				bodyStyle: 'padding: 100px 0px 10px 180px;',
+				labelWidth: 50,
+				defaults: {
+					anchor: '80%',
+					allowBlank: false,
+				},
+				items: [
+					comboExportWebsites
+				],
+				html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -90px; left: -140px; position: relative;"><img src="<?php echo $this->get('img')?>world_b.png" width=128 height=128></div>'
+			}
+		);
+		
+		var eAppsDataStore = new Ext.data.JsonStore ( {
+				autoDestroy: true,
+				url: '?act=loadInterface&lt=AppsGrid&data=export',
+				root: 'items',
+				idProperty: 'id_name',
+				fields: ['dpl_name', 'id_name']
+			}
+		);
+
+		var selectedApplication = 'none';
+		var comboExportApps = new Ext.form.ComboBox ( {
+				id: 'combo-select-export-apps',
+				name: 'comboSelectExportApps',
+				loadingText: 'Loading...',
+				typeAhead: true,
+				hideTrigger: false,
+				triggerAction: 'all',
+				mode: 'remote',
+				emptyText: 'Select an application...',
+				width: 200,
+				displayField: 'dpl_name',
+				valueField: 'id_name',
+				store: eAppsDataStore,
+				minChars: 1,
+				onSelect: function (item) {
+					Ext.getCmp('combo-select-export-apps').collapse();
+					Ext.getCmp('combo-select-export-apps').setValue(item.data.dpl_name);
+					selectedApplication = item.data.id_name;
+				}
+			}
+		);
+		
+		var exportApps = new Ext.FormPanel ( {
+				id: 'export-apps',
+				border: false,
+				bodyStyle: 'padding: 100px 0px 10px 180px;',
+				labelWidth: 50,
+				defaults: {
+					anchor: '80%',
+					allowBlank: false,
+				},
+				items: [
+					comboExportApps
+				],
+				html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -90px; left: -140px; position: relative;"><img src="<?php echo $this->get('img')?>app_b.png" width=128 height=128></div>'
+			}
+		);
+		
+		var eFrmsDataStore = new Ext.data.JsonStore ( {
+				autoDestroy: true,
+				url: '?act=loadInterface&lt=FrmDataExp',
+				root: 'items',
+				idProperty: 'id_name',
+				fields: ['name', 'id_name']
+			}
+		);
+
+		var selectedFramework = 'none';
+		var comboExportFrms = new Ext.form.ComboBox ( {
+				id: 'combo-select-export-frms',
+				name: 'comboSelectExportFrms',
+				loadingText: 'Loading...',
+				typeAhead: true,
+				hideTrigger: false,
+				triggerAction: 'all',
+				mode: 'remote',
+				emptyText: 'Select a framework...',
+				width: 200,
+				displayField: 'name',
+				valueField: 'id_name',
+				store: eFrmsDataStore,
+				minChars: 1,
+				onSelect: function (item) {
+					Ext.getCmp('combo-select-export-frms').collapse();
+					Ext.getCmp('combo-select-export-frms').setValue(item.data.name);
+					selectedFramework = item.data.id_name;
+				}
+			}
+		);
+		
+		var exportFrameworks = new Ext.FormPanel ( {
+				id: 'export-frameworks',
+				border: false,
+				bodyStyle: 'padding: 100px 0px 10px 180px;',
+				labelWidth: 50,
+				defaults: {
+					anchor: '80%',
+					allowBlank: false,
+				},
+				items: [
+					comboExportFrms
+				],
+				html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -90px; left: -140px; position: relative;"><img src="<?php echo $this->get('img')?>framework_b.png" width=128 height=128></div>'
+			}
+		);
+		
+		var sTable = 'none';
+		var rootLogin = 'none';
+		var rootPassword = '';
+		var edbTablesDataStore = new Ext.data.JsonStore ( {
+				autoDestroy: true,
+				url: '?act=loadInterface&lt=DBTables',
+				root: 'items',
+				idProperty: 'key',
+				fields: ['key', 'value']
+			}
+		);
+		
+		var exportDatabase = new Ext.FormPanel ( {
+				id: 'export-database',
+				border: false,
+				bodyStyle: 'padding: 50px 0px 10px 180px;',
+				labelWidth: 50,
+				defaults: {
+					anchor: '80%',
+					allowBlank: false,
+				},
+				items: [ {
+						xtype: 'checkbox',
+						id:'is-all-db',
+						fieldLabel: 'Export all tables',
+						anchor:'95%'
+					}, {
+						xtype: 'checkbox',
+						id:'is-drop-db',
+						fieldLabel: 'Add DROP',
+						anchor:'95%'
+					}, {
+						xtype: 'combo',
+						fieldLabel: 'Table',
+						id: 'combo-select-dbTables',
+						name: 'comboSelectDDBTables',
+						loadingText: 'Loading...',
+						typeAhead: true,
+						hideTrigger: false,
+						triggerAction: 'all',
+						mode: 'remote',
+						emptyText: 'Select a table...',
+						width: 200,
+						displayField: 'key',
+						valueField: 'value',
+						store: edbTablesDataStore,
+						minChars: 1,
+						onSelect: function (item) {
+							Ext.getCmp('combo-select-dbTables').collapse();
+							Ext.getCmp('combo-select-dbTables').setValue(item.data.value);
+							sTable = item.data.key;
+						} 
+					}, {
+						id:'export-tables-custom',
+						fieldLabel: 'Custom',
+						anchor:'95%',
+						xtype: 'textfield'
+					}
+				],
+				html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -140px; left: -170px; position: relative;"><img src="<?php echo $this->get('img')?>database_b.png" width=128 height=128></div>'
+			}
+		);
+		
+		var eLibsDataStore = new Ext.data.JsonStore ( {
+				autoDestroy: true,
+				url: '?act=loadInterface&lt=LibrariesSelect',
+				root: 'items',
+				idProperty: 'id',
+				fields: ['id_name', 'dpl_name']
+			}
+		);
+
+		var selectedLib = 'none';
+		var comboExportLibs = new Ext.form.ComboBox ( {
+				id: 'combo-select-export-libs',
+				name: 'comboSelectExportLibs',
+				loadingText: 'Loading...',
+				typeAhead: true,
+				hideTrigger: false,
+				triggerAction: 'all',
+				mode: 'remote',
+				emptyText: 'Select a library...',
+				width: 200,
+				displayField: 'dpl_name',
+				valueField: 'id_name',
+				store: eLibsDataStore,
+				minChars: 1,
+				onSelect: function (item) {
+					Ext.getCmp('combo-select-export-libs').collapse();
+					Ext.getCmp('combo-select-export-libs').setValue(item.data.id_name);
+					selectedLib = item.data.id_name;
+				}
+			}
+		);
+		
+		var exportLibs = new Ext.FormPanel ( {
+				id: 'export-library',
+				border: false,
+				bodyStyle: 'padding: 100px 0px 10px 180px;',
+				labelWidth: 50,
+				defaults: {
+					anchor: '80%',
+					allowBlank: false,
+				},
+				items: [
+					comboExportLibs
+				],
+				html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -90px; left: -140px; position: relative;"><img src="<?php echo $this->get('img')?>lib_b.png" width=128 height=128></div>'
+			}
+		);
+		
+		var ePlugsDataStore = new Ext.data.JsonStore ( {
+				autoDestroy: true,
+				url: '?act=loadInterface&lt=PlugsGrid&data=export',
+				root: 'items',
+				idProperty: 'id_name',
+				fields: ['dpl_name', 'id_name']
+			}
+		);
+
+		var selectedPlug = 'none';
+		var comboExportPlugs = new Ext.form.ComboBox ( {
+				id: 'combo-select-export-plugs',
+				name: 'comboSelectExportPlugs',
+				loadingText: 'Loading...',
+				typeAhead: true,
+				hideTrigger: false,
+				triggerAction: 'all',
+				mode: 'remote',
+				emptyText: 'Select a plug-in...',
+				width: 200,
+				displayField: 'dpl_name',
+				valueField: 'id_name',
+				store: ePlugsDataStore,
+				minChars: 1,
+				onSelect: function (item) {
+					Ext.getCmp('combo-select-export-plugs').collapse();
+					Ext.getCmp('combo-select-export-plugs').setValue(item.data.dpl_name);
+					selectedPlug = item.data.id_name;
+				}
+			}
+		);
+		
+		var exportPlugins = new Ext.FormPanel ( {
+				id: 'export-plugin',
+				border: false,
+				bodyStyle: 'padding: 100px 0px 10px 180px;',
+				labelWidth: 50,
+				defaults: {
+					anchor: '80%',
+					allowBlank: false,
+				},
+				items: [
+					comboExportPlugs
+				],
+				html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -90px; left: -140px; position: relative;"><img src="<?php echo $this->get('img')?>plugin_b.png" width=128 height=128></div>'
+			}
+		);
+		
+		var eWServicesDataStore = new Ext.data.JsonStore ( {
+				autoDestroy: true,
+				url: '?act=loadInterface&lt=WServicesSelect',
+				root: 'items',
+				idProperty: 'id',
+				fields: ['name', 'id']
+			}
+		);
+
+		var selectedWService = 'none';
+		var comboExportWServices = new Ext.form.ComboBox ( {
+				id: 'combo-select-export-ws',
+				name: 'comboSelectExportWS',
+				loadingText: 'Loading...',
+				typeAhead: true,
+				hideTrigger: false,
+				triggerAction: 'all',
+				mode: 'remote',
+				emptyText: 'Select a WEBService...',
+				width: 200,
+				displayField: 'name',
+				valueField: 'id',
+				store: eWServicesDataStore,
+				minChars: 1,
+				onSelect: function (item) {
+					Ext.getCmp('combo-select-export-ws').collapse();
+					Ext.getCmp('combo-select-export-ws').setValue(item.data.name);
+					selectedWService = item.data.id;
+				}
+			}
+		);
+		
+		var exportWServices = new Ext.FormPanel ( {
+				id: 'export-wservices',
+				border: false,
+				bodyStyle: 'padding: 100px 0px 10px 180px;',
+				labelWidth: 50,
+				defaults:
+				{
+					anchor: '80%',
+					allowBlank: false,
+				},
+				items: [
+					comboExportWServices
+				],
+				html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -90px; left: -140px; position: relative;"><img src="<?php echo $this->get('img')?>ws_b.png" width=128 height=128></div>'
+			}
+		);
+		
+		var eAuthEngineDataStore = new Ext.data.JsonStore ( {
+				autoDestroy: true,
+				url: '?act=loadInterface&lt=AuthEngine',
+				root: 'items',
+				idProperty: 'engine',
+				fields: ['engine', 'name']
+			}
+		);
+		
+		var selectedAEngine = 'none';
+		var comboExportAuthEngine = new Ext.form.ComboBox ( {
+				id: 'combo-select-export-authengine',
+				name: 'comboSelectExportAuthEngine',
+				loadingText: 'Loading...',
+				typeAhead: true,
+				hideTrigger: false,
+				triggerAction: 'all',
+				mode: 'remote',
+				emptyText: 'Select an authentification engine...',
+				width: 200,
+				displayField: 'name',
+				valueField: 'engine',
+				store: eAuthEngineDataStore,
+				minChars: 1,
+				onSelect: function (item) {
+					Ext.getCmp('combo-select-export-authengine').collapse();
+					Ext.getCmp('combo-select-export-authengine').setValue(item.data.name);
+					selectedAEngine = item.data.engine;
+				}
+			}
+		);
+		
+		var exportAuthEngine = new Ext.FormPanel ( {
+				id: 'export-authengine',
+				border: false,
+				bodyStyle: 'padding: 100px 0px 10px 180px;',
+				labelWidth: 50,
+				defaults: {
+					anchor: '80%',
+					allowBlank: false,
+				},
+				items: [
+					comboExportAuthEngine
+				],
+				html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -90px; left: -140px; position: relative;"><img src="<?php echo $this->get('img')?>file_key_b.png" width=128 height=128></div>'
+			}
+		);
+		
+		var exportPlateform = new Ext.FormPanel ( {
+				id: 'export-plateform',
+				border: false,
+				autoScroll: true,
+				bodyStyle: 'padding: 10px 0px 10px 10px;',
+				labelWidth: 50,
+				defaults:  {
+					anchor: '80%',
+					allowBlank: false,
+				},
+				items: [ {
+						xtype:'fieldset',
+						id: 'export-chk-core',
+						checkboxToggle:true,
+						title: 'Core settings',
+						autoScroll: false,
+						collapsed: true,
+						bodyStyle: 'padding: 10px;',
+						html: '<img src="<?php echo $this->get('img')?>building_go.png" width=16 height=16> Export core settings'
+					}, {
+						xtype:'fieldset',
+						id: 'export-chk-users',
+						checkboxToggle:true,
+						title: 'Users',
+						autoScroll: false,
+						defaultType: 'textfield',
+						collapsed: true,
+						bodyStyle: 'padding: 10px;',
+						html: '<img src="<?php echo $this->get('img')?>group_go.png" width=16 height=16> Export plateform users and groups'
+					}, {
+						xtype:'fieldset',
+						id: 'export-chk-acl',
+						checkboxToggle:true,
+						title: 'ACL',
+						autoScroll: false,
+						defaultType: 'textfield',
+						bodyStyle: 'padding: 10px;',
+						collapsed: true,
+						html: '<img src="<?php echo $this->get('img')?>list_go.png" width=16 height=16> Export plateform ACL'
+					}, {
+						xtype:'fieldset',
+						id: 'export-chk-rules',
+						checkboxToggle:true,
+						title: 'Forms rules',
+						autoScroll: false,
+						defaultType: 'textfield',
+						collapsed: true,
+						bodyStyle: 'padding: 10px;',
+						html: '<img src="<?php echo $this->get('img')?>application_go.png" width=16 height=16> Export plateform forms rules'
+					},
+				]
+			}
+		);
+		
+		var navExportHandler = function(direction) {
+			Ext.getCmp('win-exportStatusBar').setText('');
+			Ext.getCmp('btn-next-export-wizard').enable();
+			
+			if (direction == 1) {
+				if(winExportWizard.layout.activeItem.id == 'export-wizard-start') {
+					if (Ext.get('gotoExportWebsite').dom.checked) {
+						winExportWizard.layout.setActiveItem('export-website');
+						updateStatus('Export ->', 'start');
+					}
+					else if (Ext.get('gotoExportApps').dom.checked) {
+						winExportWizard.layout.setActiveItem('export-apps');
+						updateStatus('Export ->', 'start');
+					}
+					else if (Ext.get('gotoExportFrameworks').dom.checked) {
+						winExportWizard.layout.setActiveItem('export-frameworks');
+						updateStatus('Export ->', 'start');
+					}
+					else if (Ext.get('gotoExportDatabase').dom.checked) {
+						winExportWizard.layout.setActiveItem('export-database');
+						updateStatus('Export ->', 'start');
+					}
+					else if (Ext.get('gotoExportLibrary').dom.checked) {
+						winExportWizard.layout.setActiveItem('export-library');
+						updateStatus('Export ->', 'start');
+					}
+					else if (Ext.get('gotoExportPlugin').dom.checked) {
+						winExportWizard.layout.setActiveItem('export-plugin');
+						updateStatus('Export ->', 'start');
+					}
+					else if (Ext.get('gotoExportWServices').dom.checked) {
+						winExportWizard.layout.setActiveItem('export-wservices');
+						updateStatus('Export ->', 'start');
+					}
+					else if (Ext.get('gotoExportAuthEngine').dom.checked) {
+						winExportWizard.layout.setActiveItem('export-authengine');
+						updateStatus('Export ->', 'start');
+					}
+					else if (Ext.get('gotoExportPlateform').dom.checked) {
+						winExportWizard.layout.setActiveItem('export-plateform');
+						updateStatus('Export ->', 'start');
+					}
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-website') {
+					if (Ext.getCmp('btn-next-export-wizard').getText() == 'Finish!'){
+						winExportWizard.close();
+					}
+					
+					if (selectedWebsite == 'none') {
+						msgError('You must select a website to export !');
+					}
+					else {
+						updateStatus('Exporting website...', 'go');
+						
+						var conn = new Ext.data.Connection();
+						var req = conn.request ( {
+								url: '?act=execPlg&plg=manageWebsite',
+								method: 'POST',
+								params: "data=" + 'export::' + selectedWebsite,
+								waitMsg: 'EnsKa Core is exporting the selected website...',
+								success: function(resObj) {
+									if (resObj.responseText == "success") {
+										updateStatus('Website exported successfully!', 'ok');
+									}
+									else {
+										msgError(resObj.responseText);
+										updateStatus('Exportation failed!', 'err');
+									}
+								}
+							}
+						);
+					}
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-apps') {
+					if (Ext.getCmp('btn-next-export-wizard').getText() == 'Finish!'){
+						winExportWizard.close();
+					}
+					
+					if (selectedApplication == 'none') {
+						msgError('You must select an application to export !');
+					}
+					else {
+						updateStatus('Exporting application...', 'go');
+						
+						var tmp = selectedApplication.split(';');
+						var idWebsite = tmp[0];
+						var idApp = tmp[1];
+						
+						var conn = new Ext.data.Connection();
+						var req = conn.request ( {
+								url: '?act=execPlg&plg=manageApps',
+								method: 'POST',
+								params: "data=" + 'export::' + idWebsite + '::' + idApp + '::2',
+								waitMsg: 'EnsKa Core is exporting the selected application...',
+								success: function(resObj) {
+									if (resObj.responseText == "success") {
+										updateStatus('Application exported successfully!', 'ok');
+									}
+									else {
+										msgError(resObj.responseText);
+										updateStatus('Exportation failed!', 'err');
+									}
+								}
+							}
+						);
+					}
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-frameworks') {
+					if (Ext.getCmp('btn-next-export-wizard').getText() == 'Finish!'){
+						winExportWizard.close();
+					}
+					
+					if (selectedFramework == 'none') {
+						msgError('You must select a framework to export !');
+					}
+					else {
+						updateStatus('Exporting framework...', 'go');
+						
+						var conn = new Ext.data.Connection();
+						var req = conn.request ( {
+								url: '?act=execPlg&plg=manageFrameworks',
+								method: 'POST',
+								params: "data=" + 'export::' + selectedFramework,
+								waitMsg: 'EnsKa Core is exporting the selected framework...',
+								success: function(resObj) {
+									if (resObj.responseText == "success") {
+										updateStatus('Framework exported successfully!', 'ok');
+									}
+									else {
+										msgError(resObj.responseText);
+										updateStatus('Exportation failed!', 'err');
+									}
+								}
+							}
+						);
+					}
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-database') {
+					if (Ext.getCmp('btn-next-export-wizard').getText() == 'Finish!'){
+						winExportWizard.close();
+					}
+					
+					if (rootLogin == 'none') {
+						var editDBRootWizard = {
+							plain: false,
+							height:235,
+							deferredRender: false,
+							id: 'new-user-informations-form',
+							iconCls:'icon-infos',
+							layout:'form',
+							xtype: 'form',
+							html: '<div style="padding: 5px; background: white; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -100px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>root_b.png" width=128 height=128></div>',
+							defaults: {width: 230},
+							bodyStyle: 'padding-left: 230px; padding-top: 60px;',
+							items: [ {
+									id:'editDBRoot-login',
+									fieldLabel: 'Login',
+									anchor:'95%',
+									xtype: 'textfield',
+									minLength: 3,
+									maxLength: 50,
+									minLengthText: 'Root\'s login must be at least 3 characters long.',
+									maxLengthText: 'Root\'s login must not be bigger than 50 characters long.',
+									blankText: 'You must give a Root\'s login',
+									allowBlank:false
+								}, {
+									id:'editDBRoot-password',
+									fieldLabel: 'Password',
+									inputType: 'password',
+									anchor:'95%',
+									xtype: 'textfield',
+									minLength: 3,
+									maxLength: 50,
+									minLengthText: 'Root\'s password must be at least 3 characters long.',
+									maxLengthText: 'Root\'s password must not be bigger than 50 characters long.',
+									blankText: 'You must give a Root\'s password',
+									allowBlank:false
+								}
+							],
+							buttons: [ {
+									text: 'Save',
+									id: 'editDBRoot-save-btn',
+									handler: function() {
+										rootLogin = Ext.get('editDBRoot-login').dom.value;
+										rootPassword = Ext.get('editDBRoot-password').dom.value;
+										showEditDBRoot.close();
+									}
+								}, {
+									text: 'Cancel',
+									handler: function() {
+										showEditDBRoot.close();
+									}
+								}
+							]
+						};
+						
+						var showEditDBRoot = new Ext.Window ( {
+								closeAction: 'close',
+								layout: "fit",
+								modal: true,
+								resizable: false,
+								closable: true,
+								title: "Root login",
+								width: 625,
+								height: 230,
+								border: false,
+								items:  [
+									editDBRootWizard
+								]
+							}
+						);
+						showEditDBRoot.show();
+					}
+					else {
+						var sTables = 'none';
+						if (Ext.get('export-tables-custom').dom.value != '') {
+							sTables = Ext.get('export-tables-custom').dom.value;
+						}
+						
+						var all = 2;
+						if (Ext.get('is-all-db').dom.checked) {
+							var all = 1;
+						}
+						
+						var drop = 2
+						if (Ext.get('is-drop-db').dom.checked) {
+							var drop = 1;
+						}
+						
+						updateStatus('Exporting framework...', 'go');
+						var conn = new Ext.data.Connection();
+						
+						var req = conn.request ( {
+								url: '?act=execPlg&plg=manageDatabases',
+								method: 'POST',
+								params: "data=" + 'export::' + all + '::' + sTable + '::' + sTables + '::' + drop + '::' + rootLogin + '::' + rootPassword,
+								success: function(resObj) {
+									if (resObj.responseText == ' success') {
+										updateStatus('The datas exported successfully!', 'ok');
+									}
+									else {
+										msgError(resObj.responseText);
+										updateStatus('Exportation failed!', 'err');
+									}
+								}
+							}
+						);
+					}
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-library') {
+					if (Ext.getCmp('btn-next-export-wizard').getText() == 'Finish!'){
+						winExportWizard.close();
+					}
+					
+					if (selectedLib == 'none') {
+						msgError('You must select a library to export !');
+					}
+					else {
+						updateStatus('Exporting library...', 'go');
+						
+						var conn = new Ext.data.Connection();
+						var req = conn.request ( {
+								url: '?act=execPlg&plg=manageLibraries',
+								method: 'POST',
+								params: "data=" + 'export::' + selectedLib,
+								waitMsg: 'EnsKa Core is exporting the selected library...',
+								success: function(resObj) {
+									if (resObj.responseText == "success") {
+										updateStatus('Library exported successfully!', 'ok');
+									}
+									else {
+										msgError(resObj.responseText);
+										updateStatus('Exportation failed!', 'err');
+									}
+								}
+							}
+						);
+					}
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-plugin') {
+					if (Ext.getCmp('btn-next-export-wizard').getText() == 'Finish!'){
+						winExportWizard.close();
+					}
+					
+					if (selectedPlug == 'none') {
+						msgError('You must select a plug-in to export !');
+					}
+					else {
+						updateStatus('Exporting plug-in...', 'go');
+						
+						var tmp = selectedPlug.split(';');
+						var idWebsite = tmp[0];
+						var idPlug = tmp[1];
+						
+						var conn = new Ext.data.Connection();
+						var req = conn.request ( {
+								url: '?act=execPlg&plg=managePlugins',
+								method: 'POST',
+								params: "data=" + 'export::' + idPlug + '::' + idWebsite + '::2',
+								waitMsg: 'EnsKa Core is exporting the selected plug-in...',
+								success: function(resObj) {
+									if (resObj.responseText == "success") {
+										updateStatus('Plug-in exported successfully!', 'ok');
+									}
+									else {
+										msgError(resObj.responseText);
+										updateStatus('Exportation failed!', 'err');
+									}
+								}
+							}
+						);
+					}
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-wservices') {
+					if (Ext.getCmp('btn-next-export-wizard').getText() == 'Finish!'){
+						winExportWizard.close();
+					}
+					
+					if (selectedWService == 'none') {
+						msgError('You must select a web service to export !');
+					}
+					else {
+						updateStatus('Exporting WEBService...', 'go');
+						
+						var tmp = selectedWService.split(';');
+						var id = tmp[0];
+						var keys = tmp[1];
+						
+						var conn = new Ext.data.Connection();
+						var req = conn.request ( {
+								url: '?act=execPlg&plg=manageWServices',
+								method: 'POST',
+								params: "data=" + 'export::' + id + '::2::' + keys,
+								waitMsg: 'EnsKa Core is exporting the selected WEBService...',
+								success: function(resObj) {
+									if (resObj.responseText == "success") {
+										updateStatus('WEBService exported successfully!', 'ok');
+									}
+									else {
+										msgError(resObj.responseText);
+										updateStatus('Exportation failed!', 'err');
+									}
+								}
+							}
+						);
+					}
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-authengine') {
+					if (Ext.getCmp('btn-next-export-wizard').getText() == 'Finish!'){
+						winExportWizard.close();
+					}
+					
+					if (selectedAEngine == 'none') {
+						msgError('You must select an authentification engine to export !');
+					}
+					else {
+						updateStatus('Exporting authentification engine...', 'go');
+						
+						var conn = new Ext.data.Connection();
+						var req = conn.request ( {
+								url: '?act=execPlg&plg=manageAuthentification',
+								method: 'POST',
+								params: "data=" + 'export::' + selectedAEngine,
+								waitMsg: 'EnsKa Core is exporting the selected authentification engine...',
+								success: function(resObj) {
+									if (resObj.responseText == "success") {
+										updateStatus('Authentification engine exported successfully!', 'ok');
+									}
+									else {
+										msgError(resObj.responseText);
+										updateStatus('Exportation failed!', 'err');
+									}
+								}
+							}
+						);
+					}
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-plateform') {
+					if (Ext.getCmp('btn-next-export-wizard').getText() == 'Finish!'){
+						winExportWizard.close();
+					}
+					
+					updateStatus('Exporting Core settings...', 'go');
+					
+					var exportSettings = "";
+					
+					if (!Ext.getCmp('export-chk-core').collapsed) {
+						exportSettings = exportSettings + '1,';
+					}
+					else {	
+						exportSettings = exportSettings + '0,';
+					}
+					
+					if (!Ext.getCmp('export-chk-users').collapsed) {
+						exportSettings = exportSettings + '1,';
+					}
+					else {	
+						exportSettings = exportSettings + '0,';
+					}
+					
+					if (!Ext.getCmp('export-chk-acl').collapsed) {
+						exportSettings = exportSettings + '1,';
+					}
+					else {	
+						exportSettings = exportSettings + '0,';
+					}
+					
+					if (!Ext.getCmp('export-chk-rules').collapsed) {
+						exportSettings = exportSettings + '1,';
+					}
+					else {	
+						exportSettings = exportSettings + '0,';
+					}
+					
+					var conn = new Ext.data.Connection();
+					var req = conn.request ( {
+							url: '?act=execPlg&plg=manageCore',
+							method: 'POST',
+							params: "data=" + 'export::' + exportSettings,
+							success: function(resObj) {
+								if (resObj.responseText == "success") {
+									updateStatus('Core settings exported successfully!', 'ok');
+								}
+								else {
+									msgError(resObj.responseText);
+									updateStatus('Exportation failed!', 'err');
+								}
+							}
+						}
+					);
+				}
+			}
+			else if (direction == -1) {
+				if(winExportWizard.layout.activeItem.id == 'export-website') {
+					winExportWizard.layout.setActiveItem('export-wizard-start');
+					updateStatus('Next ->', 'back');
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-apps') {
+					winExportWizard.layout.setActiveItem('export-wizard-start');
+					updateStatus('Next ->', 'back');
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-frameworks') {
+					winExportWizard.layout.setActiveItem('export-wizard-start');
+					updateStatus('Next ->', 'back');
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-database') {
+					winExportWizard.layout.setActiveItem('export-wizard-start');
+					updateStatus('Next ->', 'back');
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-library') {
+					winExportWizard.layout.setActiveItem('export-wizard-start');
+					updateStatus('Next ->', 'back');
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-plugin') {
+					winExportWizard.layout.setActiveItem('export-wizard-start');
+					updateStatus('Next ->', 'back');
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-wservices') {
+					winExportWizard.layout.setActiveItem('export-wizard-start');
+					updateStatus('Next ->', 'back');
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-authengine') {
+					winExportWizard.layout.setActiveItem('export-wizard-start');
+					updateStatus('Next ->', 'back');
+				}
+				else if(winExportWizard.layout.activeItem.id == 'export-plateform') {
+					winExportWizard.layout.setActiveItem('export-wizard-start');
+					updateStatus('Next ->', 'back');
+				}
+			}
+		};
+		
+		function updateStatus(text, mod)
+		{
+			if (mod == 'ok') {
+				Ext.getCmp('win-exportStatusBar').setText(text);
+				Ext.getCmp('btn-prev-export-wizard').disable();
+				Ext.getCmp('btn-quit-export-wizard').disable();
+				Ext.getCmp('btn-next-export-wizard').enable();
+				Ext.getCmp('btn-next-export-wizard').setText('Finish!');
+			}
+			else if (mod == 'err') {
+				Ext.getCmp('win-exportStatusBar').setText(text);
+				Ext.getCmp('btn-next-export-wizard').enable();
+				Ext.getCmp('btn-next-export-wizard').setText('Export ->');
+				Ext.getCmp('btn-prev-export-wizard').enable();
+			}
+			else if (mod == 'go') {
+				Ext.getCmp('win-exportStatusBar').setText(text);
+				Ext.getCmp('btn-next-export-wizard').disable();
+				Ext.getCmp('btn-prev-export-wizard').disable();
+			}
+			else if(mod == 'start') {
+				Ext.getCmp('btn-prev-export-wizard').enable();
+				Ext.getCmp('btn-next-export-wizard').setText(text);
+			}
+			else if(mod == 'back') {
+				Ext.getCmp('btn-next-export-wizard').setText(text);
+				Ext.getCmp('btn-prev-export-wizard').disable();
+			}
+		}
+		
+		var winExportWizard = new Ext.Window ( {
+				closeAction: 'close',
+				id: 'win-exportWizardStart',
+				layout: 'card',
+				width: 1000,
+				height: 300,
+				plain: false,
+				modal: true,
+				resizable: false,
+				closable: true,
+				title: "Exportation assistant wizard",
+				border: false,
+				bodyStyle: 'background-color: transparent',
+				activeItem: 0,
+				items: [
+					exportWizardStart,
+					exportWebsites,
+					exportApps,
+					exportFrameworks,
+					exportDatabase,
+					exportLibs,
+					exportPlugins,
+					exportWServices,
+					exportAuthEngine,
+					exportPlateform
+				],
+				bbar: new Ext.ux.StatusBar ( {
+						id: 'win-exportStatusBar',
+						items: [ {
+								text: 'Cancel',
+								id: 'btn-quit-export-wizard',
+								handler: function () {
+									winExportWizard.close();
+								}
+							},
+								'-',
+							{
+								text: '<- Back',
+								id: 'btn-prev-export-wizard',
+								handler: navExportHandler.createDelegate(this, [-1]),
+								disabled: true
+							},
+								'-',
+							{
+								text: 'Next ->',
+								id: 'btn-next-export-wizard',
+								handler: navExportHandler.createDelegate(this, [1])
+							}
+							
+						]
+					}
+				)
+			}
+		);
+		winExportWizard.show();
+	}
+	exportPanel();
+}

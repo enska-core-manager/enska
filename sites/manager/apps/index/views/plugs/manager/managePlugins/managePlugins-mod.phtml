@@ -1,0 +1,589 @@
+var conn = new Ext.data.Connection();
+var count_aff_pluginEditor = 0;
+var winExportPlug;
+var managePluginsToolbar = new Ext.Toolbar();
+
+var managePluginsEditorMainMenu = new Ext.menu.Menu ( {
+		items:  [ {
+				text: 'Delete',
+				icon: '<?php echo $this->get('img')?>cross.png',
+				handler: confirmDeletePlugin
+			},
+				'-', {
+				text: 'Export',
+				icon: '<?php echo $this->get('img')?>export.png',
+				handler: confirmExportPlugin
+			}
+		]
+	}
+);
+
+managePluginsToolbar.add ( {
+		text:'Save',
+		tooltip: 'Save modifications',
+		icon: '<?php echo $this->get('img')?>save.png',
+		handler: function() {
+			var idPlugin = pluginListingEditorGrid.selModel.getSelected().json.id;
+			var idWebsite = pluginListingEditorGrid.selModel.getSelected().json.websiteId;
+			var pan = Ext.get('manage-plugin-edit-panel-pan').dom.value;
+			var mod = Ext.get('manage-plugin-edit-panel-mod').dom.value;
+			var win = Ext.get('manage-plugin-edit-win').dom.value;
+			var php = Ext.get('manage-plugin-edit-php').dom.value;
+			var version = Ext.get('manage-plugin-version').dom.value;
+			var versionId = Ext.get('manage-plugin-version-id').dom.value;
+			var	updateFrom = Ext.get('url-update-plug').dom.value;
+			var	updateCheck = Ext.get('check-update-plug').dom.value;
+			
+			var updateAuto = '0';
+			if (Ext.get('auto-update-plug').dom.checked) {
+				var updateAuto = '1';
+			}
+			
+			var req = conn.request ( {
+					url: '?act=execPlg&plg=managePlugins',
+					method: 'POST',
+					params: "data=" + 'editByEditor::' + idPlugin + '::' + idWebsite + '::' + pan + '::' + win + '::' + mod + '::' + php + '::' + updateFrom + '::' + updateCheck + '::' + updateAuto + '::' + version + '::' + versionId,
+					success: function(resObj) {
+						if (resObj.responseText != "success") {
+							msgError(resObj.responseText);
+						}
+					}
+				}
+			);
+		}
+	},
+	{
+		text:'Reload',
+		tooltip: 'Reload the manager',
+		icon: '<?php echo $this->get('img')?>reload.png',
+		handler: function() {
+			setTimeout("document.location = 'index'", 1);
+		}
+	},
+		'-', {
+		text:'Menu',
+		menu: managePluginsEditorMainMenu
+	}
+);
+
+var managePlugins =  {
+	id: 'managePlugins-panel',
+	title: 'EnsKa Core Manager - Manage plugins',
+	contentEl: 'managePlugins-content',
+	autoScroll: true,
+	items: [
+		managePluginsToolbar
+	]
+};
+
+var selectedIDName;
+
+var pluginsDataStore = new Ext.data.Store ( {
+		id: 'plugins-datastore',
+		proxy: new Ext.data.HttpProxy (  {
+				url:'?act=loadInterface&lt=PlugsGrid'																					
+			}
+		),
+		reader: new Ext.data.JsonReader ( {
+				root: 'results',
+				totalProperty: 'total',
+				id: 'id'
+			}, [
+				{name: 'IDPlugin', type: 'string', mapping: 'id'},
+				{name: 'DPLName', type: 'string', mapping: 'name'},
+				{name: 'Type', type: 'string', mapping: 'type'},
+				{name: 'Display', type: 'string', mapping: 'display'},
+				{name: 'Version', type: 'string', mapping: 'version'},
+				{name: 'IDVersion', type: 'int', mapping: 'versionId'},
+				{name: 'IDWebsite', type: 'string', mapping: 'websiteId'},
+				{name: 'DPLWebsite', type: 'string', mapping: 'websiteName'},
+				{name: 'Version', type: 'string', mapping: 'version'},
+				{name: 'IDVersion', type: 'int', mapping: 'versionId'},
+				{name: 'UPFrom', type: 'string', mapping: 'updateFrom'},
+				{name: 'UPAuto', type: 'int', mapping: 'updateAuto'},
+				{name: 'UPCheck', type: 'string', mapping: 'updateCheck'}
+			]
+		),
+		sortInfo: {
+			field: 'IDPlugin', 
+			direction: "ASC"
+		}
+	}
+);
+
+var pluginsColumnModel = new Ext.grid.ColumnModel ( [ {
+			header: 'Plug-in',
+			dataIndex: 'DPLName',
+			readOnly: true,
+			width: 500
+		}, {
+			header: 'Type',
+			dataIndex: 'Type',
+			readOnly: true,
+			width: 200
+		}, {
+			header: 'Display',
+			dataIndex: 'Display',
+			width: 200,
+			editor: new Ext.form.ComboBox ( {
+					typeAhead: true,
+					triggerAction: 'all',
+					store:new Ext.data.SimpleStore({
+					fields:['displayValue', 'displayName'],
+					data: [['1','Menu'],['2','Browser'],['3','Menu & Browser'],['4','None']]
+					}),
+					mode: 'local',
+					displayField: 'displayName',
+					valueField: 'displayValue',
+					lazyRender:true,
+					listClass: 'x-combo-list-small'
+				}
+			)
+		}, {
+			header: 'Version',
+			dataIndex: 'Version',
+			readOnly: true,
+			width: 100
+		}, {
+			header: 'Container',
+			dataIndex: 'DPLWebsite',
+			readOnly: true,
+			width: 300
+		}
+	]
+);
+pluginsColumnModel.defaultSortable = true;
+
+var pluginListingEditorGrid =  new Ext.grid.EditorGridPanel ( {
+		id: 'pluginListingEditorGrid',
+		store: pluginsDataStore,
+		cm: pluginsColumnModel,
+		enableColLock:false,
+		clicksToEdit:2,
+		selModel: new Ext.grid.RowSelectionModel ( {
+				singleSelect: true
+			}
+		),
+		height: '30%',
+		anchor:'95%',
+		stateful: false,
+		height: 300
+	}
+);
+
+var managePluginWizard =  {
+	xtype:'tabpanel',
+	id: 'manage-plugin-wizard',
+	plain: false,
+	border: false,
+	height: 500,
+	anchor:'95%',
+	deferredRender: false,
+	defaults:{bodyStyle:'padding:0px'},
+	contentEl: 'managePluginEditStart',
+	items: [  {
+			title:'Basics informations',
+			id: 'manage-plugin-informations-form',
+			iconCls:'icon-infos',
+			layout:'form',
+			xtype: 'form',
+			html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -110px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>plugin_b.png" width=128 height=128></div>',
+			defaults: {width: 230},
+			bodyStyle: 'padding-left: 230px; padding-top: 50px;',
+			items: [  {
+					id:'manage-plugin-name',
+					fieldLabel: 'Plug-in\'s name',
+					anchor:'50%',
+					xtype: 'textfield',
+					readOnly: true
+				}, {
+					id:'manage-plugin-type',
+					fieldLabel: 'Plug-in\'s type',
+					anchor:'50%',
+					xtype: 'textfield',
+					readOnly: true
+				}, {
+					id:'manage-plugin-container',
+					fieldLabel: 'Container',
+					anchor:'50%',
+					xtype: 'textfield',
+					readOnly: true
+				}, {
+					id:'manage-plugin-version-id',
+					fieldLabel: 'Revision',
+					xtype: 'textfield',
+					readOnly: true,
+					anchor:'50%'
+				}, {
+					id:'manage-plugin-version',
+					fieldLabel: 'Version',
+					xtype: 'textfield',
+					anchor:'50%',
+					allowBlank:false
+				}
+			]
+		}, {
+			cls:'x-plain',
+			title:'Source code (Panel)',
+			iconCls:'icon-page-white-code-blue',
+			layout:'form',
+			bodyStyle: 'padding-top: 15px; padding: 15px;',
+			items: [
+				new Ext.form.TextArea ( {
+						id:'manage-plugin-edit-panel-pan',
+						wrap:'off',
+						width: '95%',
+						height: 200,
+						anchor:'95%',
+						fieldLabel: 'Panel'
+					}
+				),
+				new Ext.form.TextArea ( {
+						id:'manage-plugin-edit-panel-mod',
+						wrap:'off',
+						width: '95%',
+						height: 200,
+						anchor:'95%',
+						fieldLabel: 'Mod'
+					}
+				)
+			]
+		},
+		{
+			cls:'x-plain',
+			title:'Source code (Window)',
+			iconCls:'icon-page-white-code-blue',
+			layout:'form',
+			bodyStyle: 'padding-top: 15px; padding: 15px;',
+			items: [
+				new Ext.form.TextArea ( {
+						id:'manage-plugin-edit-win',
+						wrap:'off',
+						width: 460,
+						height: 400,
+						anchor:'95%',
+						fieldLabel: 'Window'
+					}
+				)
+			]
+		},
+		{
+			cls:'x-plain',
+			title:'Source code (PHP Model)',
+			iconCls:'icon-page-white-php',
+			layout:'form',
+			bodyStyle: 'padding-top: 15px; padding: 15px;',
+			items: [
+				new Ext.form.TextArea ( {
+						id:'manage-plugin-edit-php',
+						wrap:'off',
+						width: 460,
+						height: 400,
+						anchor:'95%',
+						fieldLabel: 'PHP Model'
+					}
+				)
+			]
+		}, 
+		{
+			title:'Live update',
+			iconCls:'icon-drive-web',
+			id: 'manage-plug-update-form',
+			bodyStyle: 'padding: 10px;',
+			contentEl: 'live-update-plugs'
+		}
+	]
+};
+
+var wEditor = new Ext.Panel ( {
+		id: 'pluginEditor',
+		height: '100%',
+		border: false,
+		items:  [
+			managePluginWizard
+		]
+	}
+);
+
+wEditor.render('pluginEditorRender');
+pluginsDataStore.load();
+pluginListingEditorGrid.render('pluginsGridRender');
+
+function saveGridPlugin(oGrid_event)
+{
+	var idPlugin = oGrid_event.record.data.IDPlugin;
+	var idWebsite = oGrid_event.record.data.IDWebsite;
+	var	display = oGrid_event.record.data.Display;
+	var plgType = oGrid_event.record.data.Type;
+	
+	var req = conn.request ( {
+			url: '?act=execPlg&plg=managePlugins',
+			method: 'POST',
+			params: "data=" + 'editByGrid::' + idPlugin + '::' + idWebsite + '::' + plgType + '::' + display,
+			success: function(resObj) {
+				if (resObj.responseText == "success") {
+					pluginsDataStore.commitChanges();
+					pluginsDataStore.reload();
+					Ext.getCmp('left-panel').root.reload();
+				}
+				else {
+					msgError(resObj.responseText);
+					pluginsDataStore.reload();	
+				}
+			}
+		}
+	);	
+}
+
+function confirmDeletePlugin()
+{
+	if(pluginListingEditorGrid.selModel.getCount() == 1) {
+		Ext.MessageBox.confirm('EnsKa Core Manager','Are you sure you want to delete the plug-in ' + pluginListingEditorGrid.selModel.getSelected().json.name + ' ?', deletePlugin);
+	}
+	else {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select a plug-in!');
+	}
+}
+
+function deletePlugin(btn)
+{
+	if(btn == 'yes') {
+		var idPlugin = pluginListingEditorGrid.selModel.getSelected().json.id;
+		var idWebsite = pluginListingEditorGrid.selModel.getSelected().json.websiteId;
+		
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=managePlugins',
+				method: 'POST',
+				params: "data=" + 'delete::' + idPlugin + '::' + idWebsite,
+				success: function(resObj) {
+					if (resObj.responseText == "success") {
+						resetPluginEditor();
+						pluginsDataStore.reload();
+						Ext.getCmp('left-panel').root.reload();
+					}
+					else {
+						msgError(resObj.responseText);
+						pluginsDataStore.reload();
+					}
+				}
+			}
+		);
+		
+	} 
+}
+
+function confirmExportPlugin()
+{
+	if(pluginListingEditorGrid.selModel.getCount() == 1) {
+		exportPlugin('yes');
+	}
+	else {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select a plug-in!');
+	}
+}
+
+function exportPlugin(btn)
+{
+	if(btn == 'yes') {
+		winExportPlug = new Ext.Window ( {
+				closeAction: 'close',
+				layout: "fit",
+				modal: true,
+				resizable: false,
+				closable: true,
+				title: "Export the plug-in " + pluginListingEditorGrid.selModel.getSelected().json.name,
+				width: 500,
+				height: 250,
+				border: false,
+				items:  [
+					exportPlugWizard
+				]
+			}
+		);
+		
+		winExportPlug.show();
+	}
+}
+
+var	exportPlugWizard =  {
+	xtype:'tabpanel',
+	plain: false,
+	activeTab: 0,
+	height:200,
+	deferredRender: false,
+	items: [ {
+			title:'Export information',
+			iconCls:'icon-infos',
+			layout:'form',
+			xtype: 'form',
+			html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -90px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>export_b.png" width=128 height=128></div>',
+			defaults: {width: 230},
+			bodyStyle: 'padding-left: 230px; padding-top: 60px;',
+			items: [ {
+					xtype: 'checkbox',
+					id:'is-plug-release',
+					fieldLabel: 'Create a release point',
+					anchor:'95%'
+				},
+			]
+		}
+	],
+	buttons: [ {
+			text: 'Export',
+			handler: function() {	
+				var release = 2;
+				if (Ext.get('is-plug-release').dom.checked) {
+					var release = 1;
+				}
+				
+				msgWait('EnsKa Core is exporting the plug-in ' + pluginListingEditorGrid.selModel.getSelected().json.name +'...');
+				
+				var req = conn.request ( {
+						url: '?act=execPlg&plg=managePlugins',
+						method: 'POST',
+						params: "data=" + 'export::' + pluginListingEditorGrid.selModel.getSelected().json.id + '::' + pluginListingEditorGrid.selModel.getSelected().json.websiteId + '::' + release,
+						success: function(resObj) {
+							if (resObj.responseText == "success") {
+								if (release == 1) {
+									var	up = pluginListingEditorGrid.selModel.getSelected().json.versionId
+									up++;
+									Ext.get('manage-plugin-version-id').dom.value = up;
+									pluginsDataStore.reload();
+								}
+								
+								winExportPlug.close();
+								msgOk('The plugin has been exported!');
+							}
+							else {
+								msgError(resObj.responseText);
+							}
+						}
+					}
+				);
+			}
+		},
+		{
+			text: 'Cancel',
+			handler: function() {
+				winExportPlug.close();
+			}
+		}
+	]
+};
+
+function fillPluginEditor()
+{	
+	if (count_aff_pluginEditor == 0) {
+		Ext.getCmp('manage-plugin-wizard').activate('manage-plugin-informations-form');
+		count_aff_pluginEditor++;
+	}
+	
+	Ext.get('manage-plugin-name').dom.value = pluginListingEditorGrid.selModel.getSelected().json.name;
+	Ext.get('manage-plugin-type').dom.value = pluginListingEditorGrid.selModel.getSelected().json.type;
+	Ext.get('manage-plugin-container').dom.value = pluginListingEditorGrid.selModel.getSelected().json.websiteName;
+	Ext.get('manage-plugin-version').dom.value = pluginListingEditorGrid.selModel.getSelected().json.version;
+	Ext.get('manage-plugin-version-id').dom.value = pluginListingEditorGrid.selModel.getSelected().json.versionId;
+	Ext.get('check-update-plug').dom.value = pluginListingEditorGrid.selModel.getSelected().json.updateCheck;
+	Ext.get('live-update-infos-plug').update('');
+	
+	Ext.get('url-update-plug').dom.value = pluginListingEditorGrid.selModel.getSelected().json.updateFrom;
+	if (pluginListingEditorGrid.selModel.getSelected().json.updateFrom == 'none') {
+		Ext.get('url-update-plug').dom.value = '';
+	}
+	
+	Ext.get('auto-update-plug').dom.checked = false
+	if (pluginListingEditorGrid.selModel.getSelected().json.updateAuto == 1) {
+		Ext.get('auto-update-plug').dom.checked = true;
+	}
+	
+	var fillSourcePanel = conn.request ( {
+			url: '?act=loadInterface&lt=GetPluginSource',
+			method: 'GET',
+			params: "data=" + pluginListingEditorGrid.selModel.getSelected().json.id + '::' + pluginListingEditorGrid.selModel.getSelected().json.websiteId + '::panel',
+			success: function(resObj) {
+				Ext.get('manage-plugin-edit-panel-pan').dom.value = resObj.responseText
+			}
+		}
+	);
+	
+	var fillSourceMod = conn.request ( {
+			url: '?act=loadInterface&lt=GetPluginSource',
+			method: 'GET',
+			params: "data=" + pluginListingEditorGrid.selModel.getSelected().json.id + '::' + pluginListingEditorGrid.selModel.getSelected().json.websiteId + '::mod',
+			success: function(resObj) {
+				Ext.get('manage-plugin-edit-panel-mod').dom.value = resObj.responseText
+			}
+		}
+	);
+	
+	var fillSourceWin = conn.request ( {
+			url: '?act=loadInterface&lt=GetPluginSource',
+			method: 'GET',
+			params: "data=" + pluginListingEditorGrid.selModel.getSelected().json.id + '::' + pluginListingEditorGrid.selModel.getSelected().json.websiteId + '::win',
+			success: function(resObj) {
+				Ext.get('manage-plugin-edit-win').dom.value = resObj.responseText
+			}
+		}
+	);
+	
+	var fillSourcePhp = conn.request ( {
+			url: '?act=loadInterface&lt=GetPluginSource',
+			method: 'GET',
+			params: "data=" + pluginListingEditorGrid.selModel.getSelected().json.id + '::' + pluginListingEditorGrid.selModel.getSelected().json.websiteId + '::php',
+			success: function(resObj) {
+				Ext.get('manage-plugin-edit-php').dom.value = resObj.responseText
+			}
+		}
+	);
+}
+
+function resetPluginEditor()
+{	
+	Ext.get('manage-plugin-name').dom.value = "";
+	Ext.get('manage-plugin-type').dom.value = "";
+	Ext.get('manage-plugin-version').dom.value = "";
+	Ext.get('manage-plugin-version-id').dom.value = "";
+	Ext.get('manage-plugin-container').dom.value = "";
+	Ext.get('manage-plugin-edit-panel-pan').dom.value = "";
+	Ext.get('manage-plugin-edit-panel-mod').dom.value = "";
+	Ext.get('manage-plugin-edit-win').dom.value = "";
+	Ext.get('manage-plugin-edit-php').dom.value = "";
+	
+	Ext.get('check-update-plug').dom.value = 'D';
+	Ext.get('url-update-plug').dom.value = '';
+	Ext.get('auto-update-plug').dom.checked = false;
+	Ext.get('live-update-infos-plug').update('');
+}
+
+function checkUpdatePlug()
+{
+	msgWait('EnsKa Core is checking update for <i><b>' + pluginListingEditorGrid.selModel.getSelected().json.name + '</i></b>...');	
+	var req = conn.request ( {
+			url: '?act=execPlg&plg=managePlugins',
+			method: 'POST',
+			params: "data=" + 'checkUpdate::' + pluginListingEditorGrid.selModel.getSelected().json.versionId + '::' + pluginListingEditorGrid.selModel.getSelected().json.updateFrom,
+			success: function(resObj) {
+				var	msgTab = resObj.responseText.split(';');
+				if (msgTab[0] == 'success') {
+					msgOk('New update is available for plug-in <i><b>' + pluginListingEditorGrid.selModel.getSelected().json.name + '</i></b>');
+					Ext.get('live-update-infos-plug').update('<span style="color: green;">New update is available!<br>Version :<b>' + msgTab[2] +'</b><br>Revision :<b>' + msgTab[1] + '</b><br>Size :<b>' + msgTab[3] +'</b><br>Release date :<b>' + msgTab[4] + '</b><br><input type="button" id="btn-update-plug" value="Update now" /></span>');
+				}
+				else {
+					var	msgTab = resObj.responseText.split(';');
+					if (msgTab[0] == 'err') {
+						msgError(msgTab[1]);
+						Ext.get('live-update-infos-plug').update('<span style="color: red;">Error on get update!<br>' + msgTab[1] +'</span>');
+					}
+					else {
+						msgOk('No new update is available for plug-in <i><b>' + pluginListingEditorGrid.selModel.getSelected().json.name + '</i></b>');
+						Ext.get('live-update-infos-plug').update('<span style="color: royalblue;">The plug-in ' + pluginListingEditorGrid.selModel.getSelected().json.name +' is up to date!</span>');
+					}
+				}
+			}
+		}
+	);
+}
+
+pluginListingEditorGrid.on('afteredit', saveGridPlugin);
+pluginListingEditorGrid.on('rowClick', fillPluginEditor);
+Ext.get('btn-check-update-plug').on('click', checkUpdatePlug);

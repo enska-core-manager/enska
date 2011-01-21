@@ -1,0 +1,79 @@
+
+<div id="manageCache-content" style="padding: 10px;">
+	<br>
+	<fieldset id="fs"><legend><img src="<?php echo $this->get('img')?>cache.png" width="16" height="16"> Cache settings :</legend>
+		<table cellspacing="5">
+			<tr>
+				<td><h5>Status :</h5></td>
+				<td>
+					<select id="status-cache">
+						<option value="0">Disable</option>
+						<option value="1">Enable</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td><h5>Cache path :</h5></td>
+				<td><input type="text" id="folder-cache" size="50"></td>
+			</tr>
+			<tr>
+				<td><h5>Time to cache :</h5></td>
+				<td>
+					<table>
+						<tr>
+							<td><input type="text" size="2" id="time-cache"></td>
+							<td><small>minutes</small></td>
+						</tr>	
+					</table>
+				</td>
+				<td></td>
+			</tr>
+		</table>
+	</fieldset>
+	<br><br>
+	<fieldset id="fs"><legend><img src="<?php echo $this->get('img')?>link_break.png" width="16" height="16"> Cache exclusion :</legend>
+		<table cellspacing="5">
+			<tr>
+				<td><h5>URL to exclude :</h5></td>
+				<td><input type="text" id="url-cache" size="50"></td>
+				<td><input type="button" id="btn-add-url-cache" value="Add"></td>
+			</tr>
+			<tr>
+				<td valign="top"><h5>Exclusions :</h5></td>
+				<td>
+					<table>
+						<tr>
+							<td>
+								<div id="renderForExcludesCache"></div>
+							</td>
+							<td valign="bottom">
+								<input type="button" id="btn-remove-url-cache" value="Remove">
+							</td>
+						</tr>
+					</table>
+				</td>
+				<td></td>
+			</tr>
+		</table>
+	</fieldset>
+	<br><br>
+	<fieldset id="fs"><legend><img src="<?php echo $this->get('img')?>tag_blue.png" width="16" height="16"> Sessions settings :</legend>
+		<table cellspacing="5">
+			<tr>
+				<td><h5>Sessions cache expire :</h5></td>
+				<td><input type="text" id="time-sessions" size="2"> <small>minutes</small></td>
+			</tr>
+			<tr>
+				<td><h5>Sessions cache limiter :</h5></td>
+				<td>
+					<select id="limiter-sessions">
+						<option value="public">Public</option>
+						<option value="private_no_expire">Private no expire</option>
+						<option value="private">Private</option>
+						<option value="nocache">No cache</option>
+					</select>
+				</td>
+			</tr>
+		</table>
+	</fieldset>
+</div>

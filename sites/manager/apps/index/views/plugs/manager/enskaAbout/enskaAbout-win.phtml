@@ -1,0 +1,22 @@
+if (obj.id == "win-enskaAbout")
+{
+	var winEnskaAbout = new Ext.Window ( {
+			closeAction: 'close',
+			layout: 'fit',
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: 'About...',
+			width: 580,
+			height: 185,
+			border: false,
+			html: '<div style="padding: 15px; background: white; height: 100%;"><span style="font-size: 28px; font-weight: normal;">EnsKa Core Manager<br><small style="font-size: 18px; color: royalblue;">'
+					+'<?php echo $this->get('version');?>, R<?php echo $this->get('revision');?></small></span><br>'
+					+'<span style="font-size: 10px">Release: <?php echo $this->get('release');?></span>'
+					+'<hr style="padding-top: 20px; color: lightgray; width: 100%"><br>'
+					+'&copy; 2008 - <?php echo date('Y') ?> EnsKa-System. All rights reserved'
+					+'</div>'
+		}
+	);
+	winEnskaAbout.show();
+}

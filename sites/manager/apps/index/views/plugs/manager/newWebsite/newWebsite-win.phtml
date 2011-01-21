@@ -1,0 +1,322 @@
+if (obj.id == "win-newWebsite")
+{
+	var treeAuth = "auth";
+	var treeUnAuth = "unauth";
+	var conn = new Ext.data.Connection();
+	var framework;
+	
+	var frameworksDataStore = new Ext.data.JsonStore ( {
+			autoDestroy: true,
+			url: '?act=loadInterface&lt=FrmData',
+			root: 'items',
+			idProperty: 'id',
+			fields: ['id', 'name', 'version']
+		}
+	);
+	
+	var users = new Ext.tree.TreePanel ( {
+			title: 'Users',
+			id:'new-website-users-panel',
+			cellCls:'td-new-website-users-panel',
+			iconCls:'icon-users',
+			border:true,
+			height: 175,
+			autoScroll: true,
+			rootVisible: true,
+			singleExpand: false,
+			useArrows: true,
+			animate: true,
+			dataUrl:'?act=loadInterface&lt=Users',
+			enableDD:true,
+			ddGroup:'listUsr',
+			root: {
+				nodeType: 'async',
+				draggable:false,
+				text: 'Users',
+				id:'node-root',
+				iconCls:'tree-server'
+			}
+		}
+	);
+				
+	var auth = new Ext.tree.TreePanel ( {
+			title: 'Authorized users',
+			id:'new-website-auth-users-panel',
+			cellCls:'td-new-website-auth-users-panel',
+			iconCls:'icon-user-auth',
+			border:true,
+			height: 175,
+			xtype: 'treepanel',
+			autoScroll: true,
+			rootVisible: true,
+			lines: true,
+			singleExpand: true,
+			useArrows: true,
+			animate: true,
+			dataUrl:'?act=loadInterface&lt=AUTHUsers',
+			enableDD:true,
+			ddGroup:'listUsr',
+			root: {
+				nodeType: 'async',
+				draggable:false,
+				text: 'Users',
+				iconCls:'tree-valid'
+			},
+			listeners: {
+				append: function (tree, parent, node, index) {
+					treeAuth = treeAuth + "/" + node.id
+				},
+				beforemovenode: function (tree, node, oldParent, newParent, index) {
+					var newAuth = "";
+					var tmpAuth = treeAuth.split('/');
+					for (i=0; i<tmpAuth.length; i++) {
+						if((tmpAuth[i] != node.id) && (node.id != '') && (tmpAuth[i] != '')) {
+							newAuth = newAuth + tmpAuth[i] + '/';
+							if ((i+1) < tmpAuth.length) {
+								newAuth = newAuth + '/';
+							}
+						}
+					}
+					treeAuth = newAuth;
+				}
+			}
+		}
+	);
+
+	var unAuth = new Ext.tree.TreePanel ( {
+			title: 'Unauthorized users',
+			id:'new-website-unauth-users-panel',
+			cellCls:'td-new-website-unauth-users-panel',
+			iconCls:'icon-user-unauth',
+			border:true,
+			height: 175,
+			xtype: 'treepanel',
+			autoScroll: true,
+			rootVisible: true,
+			lines: true,
+			singleExpand: true,
+			useArrows: true,
+			animate: true,
+			dataUrl:'?act=loadInterface&lt=UNAUTHUsers',
+			enableDD:true,
+			ddGroup:'listUsr',
+			root: {
+				nodeType: 'async',
+				draggable:false,
+				text: 'Users',
+				iconCls:'tree-stop'
+			},
+			listeners: {
+				append: function (tree, parent, node, index) {
+					treeUnAuth = treeUnAuth + "/" + node.id
+				},
+				beforemovenode: function (tree, node, oldParent, newParent, index) {
+					var newUnAuth = "";
+					var tmpUnAuth = treeUnAuth.split('/');
+					for (i=0; i<tmpUnAuth.length; i++) {
+						if((tmpUnAuth[i] != node.id) && (node.id != '') && (tmpUnAuth[i] != '')) {
+							newUnAuth = newUnAuth + tmpUnAuth[i];
+							if ((i+1) < tmpUnAuth.length) {
+								newUnAuth = newUnAuth + '/';
+							}
+						}
+					}
+					treeUnAuth = newUnAuth;
+				}			
+			}
+		}
+	);
+	
+	var newWebsiteWizard =  {
+		xtype:'tabpanel',
+		plain: false,
+		activeTab: 0,
+		height:235,
+		deferredRender: false,
+		defaults:{bodyStyle:'padding:0px'},
+		items: [ {
+				title:'Basics informations',
+				iconCls:'icon-infos',
+				layout:'form',
+				xtype: 'form',
+				id: 'new-website-informations-form',
+				html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -160px; left: -200px; position: relative;"><img src="ressources/sites/manager/index/images/world_add_b.png" width=128 height=128></div>',
+				defaults: {width: 230},
+				bodyStyle: 'padding-left: 230px; padding-top: 50px;',
+				items: [ {
+						id:'new-website-dplName',
+						fieldLabel: 'Display name',
+						anchor:'95%',
+						name: 'dpl_name',
+						xtype: 'textfield',
+						minLength: 4,
+						maxLength: 50,
+						minLengthText: 'Display name must be at least 4 characters long.',
+						maxLengthText: 'Display name must not be bigger than 50 characters long.',
+						blankText: 'You must give a Display name',
+						allowBlank:false
+					}, {
+						id:'new-website-idName',
+						fieldLabel: 'ID name',
+						xtype: 'textfield',
+						anchor:'95%',
+						minLength: 3,
+						maxLength: 20,
+						minLengthText: 'ID name must be at least 3 characters long.',
+						maxLengthText: 'ID name must not be bigger than 20 characters long.',
+						blankText: 'You must give an ID name',
+						allowBlank:false
+					}, {
+						id: 'new-website-frm',
+						fieldLabel: 'Framework',
+						xtype: 'combo',
+						loadingText: 'Loading frameworks...',
+						typeAhead: true,
+						hideTrigger: false,
+						triggerAction: 'all',
+						mode: 'remote',
+						emptyText: 'Select a framework...',
+						anchor:'95%',
+						displayField: 'name',
+						valueField: 'id',
+						store: frameworksDataStore,
+						minChars: 3,
+						onSelect: function (item) {
+							Ext.getCmp('new-website-frm').collapse();
+							Ext.getCmp('new-website-frm').setValue(item.id);
+							framework = item.id;
+						}
+					},
+					new Ext.form.TextArea ( {
+							id:'new-website-description',
+							wrap:'on',
+							anchor:'95%',
+							fieldLabel: 'Description',
+						}
+					)
+				]
+			}, {	
+				title:'Security',
+				iconCls:'icon-lock-break',
+				baseCls:'x-plain',
+				layout:'table',
+				layoutConfig: {
+					columns: 3
+				},
+				items: [
+					users,
+					auth,
+					unAuth
+				]
+			}, {
+				cls:'x-plain',
+				title:'Settings',
+				iconCls:'icon-page-white-gear',
+				layout:'form',
+				bodyStyle: 'padding-top: 15px; padding: 15px;',
+				items: [ {
+						id:'new-website-alias',
+						fieldLabel: 'Alias',
+						xtype: 'textfield',
+						anchor:'95%',
+						value: '',
+						minLength: 1,
+						maxLength: 254,
+						minLengthText: 'Application path must be at least 1 character long.',
+						maxLengthText: 'Application path must not be bigger than 254 characters long.',
+						allowBlank:false,
+						blankText: 'You must give an alias path'
+					}, {
+						id:'new-website-app-path',
+						fieldLabel: 'path_apps',
+						xtype: 'textfield',
+						anchor:'95%',
+						value: 'apps/',
+						minLength: 3,
+						maxLength: 254,
+						minLengthText: 'Application path must be at least 3 characters long.',
+						maxLengthText: 'Application path must not be bigger than 254 characters long.',
+						allowBlank:false,
+						blankText: 'You must give an applications path'
+					},
+					new Ext.form.TextArea ( {
+							id:'new-website-config',
+							wrap:'off',
+							height: 150,
+							anchor:'95%',
+							fieldLabel: 'Local configuration',
+							name: 'config'
+						}
+					)
+				]
+			}
+		],
+		buttons: [ {
+				text: 'Save',
+				handler: function() {
+					if(Ext.getCmp('new-website-informations-form').getForm().isValid()) {
+						var dplName = Ext.get('new-website-dplName').dom.value;
+						var	idName = Ext.get('new-website-idName').dom.value;
+						var	description = Ext.get('new-website-description').dom.value;
+						var	config = Ext.get('new-website-config').dom.value;
+						var	appPath = Ext.get('new-website-app-path').dom.value;
+						var	alias = Ext.get('new-website-alias').dom.value;
+						
+						msgWait('EnsKa Core is creating the website ' + dplName +'...');
+						
+						var req = conn.request ( {
+								url: '?act=execPlg&plg=newWebsite',
+								method: 'POST',
+								params: "data=" + 'create::' + treeAuth + '::' + treeUnAuth + '::' + config + '::' + appPath + '::' + description + '::' + dplName + '::' + framework + '::' + alias + '::' + idName,
+								success: function(resObj) {
+									if (resObj.responseText == "success") {	
+										Ext.Msg.show ( {
+												title:'EnsKa Core Manager',
+												msg: 'The website ' + dplName + ' has been created !<br><br>The manager going to be reloaded.',
+												buttons: Ext.Msg.OK,
+												icon: Ext.MessageBox.INFO,
+												fn: function () {
+													winNewWebsite.close();
+													setTimeout("document.location = 'index'", 1);
+													
+												}
+											}
+										);
+									}
+									else {
+										msgError(resObj.responseText);
+									}
+								}
+							}
+						);
+					}
+				}
+			},
+			{
+				text: 'Cancel',
+				handler: function() {
+					winNewWebsite.close();
+				}
+			}
+		]
+	};
+
+	var winNewWebsite = new Ext.Window  ( {
+			closeAction: 'close',
+			layout: "fit",
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: "Create a new website",
+			width: 625,
+			height: 320,
+			border: false,
+			items:  [
+				newWebsiteWizard
+			]
+		}
+	);
+	
+	users.getRootNode().expand();
+	winNewWebsite.show();
+}

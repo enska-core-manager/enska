@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<definitions name="%name%_wsdl_api" targetNamespace="urn:%name%_wsdl_api" xmlns:typens="urn:%name%_wsdl_api" xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
+xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:typens0="http://%host%/%website%/%name%/ws/%name%_server_api.php">
+  
+	<!-- <message name="execute"/> -->	
+  
+	<message name="execute">
+		<part name="token" />
+		<part name="ua" />
+		<part name="params" />
+	</message>
+	
+	<message name="executeResponse">
+		<part name="executeReturn"/>
+	</message>
+  
+	<portType name="serverPortType">
+		<operation name="execute">
+			<input message="typens:execute"/>
+			<output message="typens:executeResponse"/>
+		</operation>
+	</portType>
+  
+  
+	<binding name="serverBinding" type="typens:serverPortType">
+		<soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+    
+		<operation name="execute">
+			<soap:operation soapAction="urn:serverAction"/>  
+			<input>
+				<soap:body namespace="urn:%name%_wsdl_api" use="encoded" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+			</input>
+			<output>
+				<soap:body namespace="urn:%name%_wsdl_api" use="encoded" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+			</output>
+		</operation>
+
+	</binding>
+  
+  
+	<service name="%name%_wsdl_apiService">
+		<port name="serverPort" binding="typens:serverBinding">
+			<soap:address location="http://%host%/%website%/%name%/ws/%name%_server_api.php"/>
+		</port>
+	</service>
+  
+</definitions>

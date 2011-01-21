@@ -1,0 +1,380 @@
+if (obj.id == "win-importWizard")
+{
+	function importPanel()
+	{
+		var sImport = 'none';
+		var	sOptions = 'none';
+		var rLogin = 'none';
+		var rPassword = ' ';
+		
+		var tImport = [
+			[1, 'Website'],
+			[2, 'Application'],
+			[3, 'Framework'],
+			[4, 'SQL Script'],
+			[5, 'Library'],
+			[6, 'Plug-in'],
+			[7, 'WEB Service'],
+			[8, 'Authentification engine'],
+			[9, 'Core settings']
+		];
+		
+		var importTypesDataStore = new Ext.data.ArrayStore ( {
+				fields: ['key','value'],
+				data : tImport
+			}
+		);
+		
+		var importPanelWizard = new Ext.FormPanel ( {			
+				plain: false,
+				height:235,
+				deferredRender: false,
+				id: 'import-informations-form',
+				fileUpload: true,
+				html: '<div style="padding: 5px; background: white; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -90px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>import_b.png" width=128 height=128></div>',
+				defaults: {width: 230},
+				bodyStyle: 'padding-left: 230px; padding-top: 60px;',
+				items: [ {
+						id: 'import-type',
+						fieldLabel: 'Type',
+						xtype: 'combo',
+						name: 'comboSelectImportationType',
+						loadingText: 'Loading types...',
+						typeAhead: true,
+						hideTrigger: false,
+						triggerAction: 'all',
+						mode: 'local',
+						emptyText: 'Select an importation type...',
+						anchor:'95%',
+						displayField: 'value',
+						valueField: 'key',
+						store: importTypesDataStore,
+						minChars: 3,
+						selectOnFocus: true,
+						forceSelection: true,
+						onSelect: function (item) {
+							Ext.getCmp('import-type').collapse();
+							Ext.getCmp('import-type').setValue(item.data.value);
+							sImport = item.data.key;
+							sOptions = 'none';
+						}
+					}, {
+						xtype: 'fileuploadfield',
+						id: 'form-file-import',
+						emptyText: 'Select an archive...',
+						fieldLabel: 'Archive',
+						name: 'file-import',
+						buttonText: '...',
+						buttonCfg: {
+							iconCls: 'icon-browse'
+						}
+					}
+				],
+				buttons: [ {
+						text: 'Import',
+						handler: function() {
+							if (((sImport == 2) || (sImport == 6) || (sImport == 7)) && (sOptions == 'none')) {
+								selectWebsite();
+							}
+							else if ((sImport == 4) && (rLogin == 'none')) {
+								if (rLogin == 'none') {
+									var editDBRootWizard = {
+										plain: false,
+										height:235,
+										deferredRender: false,
+										id: 'new-root-informations-form',
+										iconCls:'icon-infos',
+										layout:'form',
+										xtype: 'form',
+										html: '<div style="padding: 5px; background: white; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -100px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>root_b.png" width=128 height=128></div>',
+										defaults: {width: 230},
+										bodyStyle: 'padding-left: 230px; padding-top: 60px;',
+										items: [ {
+												id:'editDBRoot-login',
+												fieldLabel: 'Login',
+												anchor:'95%',
+												xtype: 'textfield',
+												minLength: 3,
+												maxLength: 50,
+												minLengthText: 'Root\'s login must be at least 3 characters long.',
+												maxLengthText: 'Root\'s login must not be bigger than 50 characters long.',
+												blankText: 'You must give a Root\'s login',
+												allowBlank:false
+											}, {
+												id:'editDBRoot-password',
+												fieldLabel: 'Password',
+												inputType: 'password',
+												anchor:'95%',
+												xtype: 'textfield',
+												minLength: 3,
+												maxLength: 50,
+												minLengthText: 'Root\'s password must be at least 3 characters long.',
+												maxLengthText: 'Root\'s password must not be bigger than 50 characters long.',
+												blankText: 'You must give a Root\'s password',
+												allowBlank:false
+											}
+										],
+										buttons: [ {
+												text: 'Close',
+												id: 'editDBRoot-save-btn',
+												handler: function() {
+													rLogin = Ext.get('editDBRoot-login').dom.value;
+													rPassword = Ext.get('editDBRoot-password').dom.value;
+													
+													if (rLogin == '') {
+														rLogin = 'none';
+													}
+													
+													showEditDBRoot.close();
+												}
+											}
+										]
+									};
+									
+									var showEditDBRoot = new Ext.Window ( {
+											closeAction: 'close',
+											layout: "fit",
+											modal: true,
+											resizable: false,
+											closable: true,
+											title: "Root login",
+											width: 625,
+											height: 230,
+											border: false,
+											items:  [
+												editDBRootWizard
+											]
+										}
+									);
+									showEditDBRoot.show();
+								}
+							}
+							else if ((sImport == 1) && (sOptions == 'none')) {
+								var editAlias = {
+									plain: false,
+									height:235,
+									deferredRender: false,
+									id: 'new-alias-informations-form',
+									iconCls:'icon-infos',
+									layout:'form',
+									xtype: 'form',
+									html: '<div style="padding: 5px; background: white; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -85px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>world_b.png" width=128 height=128></div>',
+									defaults: {width: 230},
+									bodyStyle: 'padding-left: 230px; padding-top: 70px;',
+									items: [ {
+											id:'alias',
+											fieldLabel: 'Alias',
+											anchor:'95%',
+											xtype: 'textfield',
+											minLength: 8,
+											maxLength: 100,
+											minLengthText: 'Website alias must be at least 8 characters long.',
+											maxLengthText: 'Website alias must not be bigger than 100 characters long.',
+											blankText: 'You must give a website alias',
+											allowBlank:false
+										}
+									],
+									buttons: [ {
+											text: 'Close',
+											id: 'editDBRoot-save-btn',
+											handler: function() {
+												sOptions = Ext.get('alias').dom.value;
+												if (sOptions == '') {
+													sOptions = 'none';
+												}
+												showEditAlias.close();
+											}
+										}
+									]
+								};
+								
+								var showEditAlias = new Ext.Window ( {
+										closeAction: 'close',
+										layout: "fit",
+										modal: true,
+										resizable: false,
+										closable: true,
+										title: "Website alias",
+										width: 625,
+										height: 230,
+										border: false,
+										items:  [
+											editAlias
+										]
+									}
+								);
+								showEditAlias.show();
+							}
+							else {
+								if(importPanelWizard.getForm().isValid()) {
+									importPanelWizard.getForm().submit ( {
+											url: '?act=execPlg&plg=manageImports',
+											method: 'POST',
+											params: "data=" + 'run::' + sImport + '::' + sOptions + '::' + rLogin + '::' + rPassword,
+											waitMsg: 'EnsKa Core is importing the selected archive...',
+											success: function(importPanelWizard, o) {
+												obj = Ext.util.JSON.decode(o.response.responseText);
+												tabMsg = obj.msg.msgInfo.split(';');
+												if (tabMsg[0] != 'err') {
+													if ((sImport == 1) || (sImport == 6) || (sImport == 9)) {
+														Ext.Msg.show ( {
+																title:'EnsKa Core Manager',
+																msg: tabMsg[0] + '<br><br>The manager going to be reloaded.',
+																buttons: Ext.Msg.OK,
+																icon: Ext.MessageBox.INFO,
+																fn: function () {
+																	winImportPanel.close();
+																	setTimeout("document.location = 'index'", 1);
+																}
+															}
+														);
+													}
+													else if(sImport == 2) {
+														appsDataStore.reload();
+														winImportPanel.close();
+														msgOk(tabMsg[0]);
+													}
+													else if(sImport == 3) {
+														frameworksPanelDataStore.reload();
+														winImportPanel.close();
+														msgOk(tabMsg[0]);
+													}
+													else if(sImport == 4) {
+														databasesDataStore.reload();
+														winImportPanel.close();
+														msgOk(tabMsg[0]);
+													}
+													else if(sImport == 5) {
+														librariesDataStore.reload();
+														winImportPanel.close();
+														msgOk(tabMsg[0]);
+													}
+													else if(sImport == 7) {
+														wservicesDataStore.reload();
+														winImportPanel.close();
+														msgOk(tabMsg[0]);
+													}
+													else if(sImport == 8) {
+														winImportPanel.close();
+														msgOk(tabMsg[0]);
+													}
+													else {
+														winImportPanel.close();
+														msgOk(tabMsg[0]);
+													}
+												}
+												else {
+													msgError(tabMsg[1]);
+												}
+											}
+										}
+									);
+								}
+							}
+						}
+					},
+					{
+						text: 'Cancel',
+						handler: function() {
+							winImportPanel.close();
+						}
+					}
+				]
+			}
+		);
+		
+		function selectWebsite()
+		{
+			
+			var iWebsitesDataStore = new Ext.data.JsonStore ( {
+					autoDestroy: true,
+					url: '?act=loadInterface&lt=WebsiteData',
+					root: 'items',
+					idProperty: 'id',
+					fields: ['id', 'dpl_name', 'id_name']
+				}
+			);
+			
+			var comboImportWebsites = new Ext.form.ComboBox ( {
+					id: 'combo-select-import-website',
+					name: 'comboSelectImportWebsite',
+					loadingText: 'Loading...',
+					typeAhead: true,
+					hideTrigger: false,
+					triggerAction: 'all',
+					mode: 'remote',
+					emptyText: 'Select a website...',
+					width: 200,
+					displayField: 'dpl_name',
+					valueField: 'id_name',
+					store: iWebsitesDataStore,
+					minChars: 1,
+					onSelect: function (item) {
+						Ext.getCmp('combo-select-import-website').collapse();
+						Ext.getCmp('combo-select-import-website').setValue(item.data.dpl_name);
+						sOptions = item.data.id_name;
+					}
+				}
+			);
+			
+			var importWebsites = new Ext.FormPanel ( {
+					id: 'import-website',
+					border: false,
+					bodyStyle: 'padding: 80px 0px 10px 180px;',
+					labelWidth: 50,
+					defaults: {
+						anchor: '80%',
+						allowBlank: false,
+					},
+					items: [
+						comboImportWebsites
+					]
+					,
+					html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -90px; left: -140px; position: relative;"><img src="<?php echo $this->get('img')?>world_b.png" width=128 height=128></div>'
+				}
+			);
+			
+			var showSelectWebsites = new Ext.Window ( {
+					closeAction: 'close',
+					layout: "fit",
+					modal: true,
+					resizable: false,
+					closable: true,
+					title: "Select a destination website",
+					width: 625,
+					height: 230,
+					border: false,
+					items:  [
+						importWebsites
+					],
+					buttons: [ {
+							text: 'Close',
+							handler: function() {
+								showSelectWebsites.close();
+							}
+						}
+					]
+				}
+			);
+			showSelectWebsites.show();
+		}
+		
+		winImportPanel = new Ext.Window ( {
+				closeAction: 'close',
+				layout: "fit",
+				modal: true,
+				resizable: false,
+				closable: true,
+				title: 'Import assistant wizard',
+				width: 600,
+				height: 250,
+				border: false,
+				items: [
+					importPanelWizard
+				]
+			}
+		);
+		winImportPanel.show();
+	}
+	importPanel();
+}

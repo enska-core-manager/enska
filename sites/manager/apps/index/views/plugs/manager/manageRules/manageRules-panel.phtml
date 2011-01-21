@@ -1,0 +1,51 @@
+
+<div id="manageRules-content">
+	<div id="ruleEditorRender"></div>
+	<div id="mhead" style="width: 100%; border-bottom: 1px lightblue solid;">
+		<table cellpadding=0 cellspacing=0 border=0>
+			<tr>
+				<td width=20>
+					<?php $this->image('add.png', Array('type'=>'usr', 'width'=>'16', 'height'=>'16')); ?>
+				</td>
+				<td>Add a new parameter</td>
+			</tr>
+		</table>
+		<br>
+		<table>
+			<tr>
+				<td><h5>Rule name :</h5></td>
+				<td><div id='renderForAvailableRules'></div></td>
+			</tr>
+			<tr><td><br></td></tr>
+			<tr>
+				<td><h5>Field name:</h5></td>
+				<td><input type="text" name="field" id="u-field" size="24"/></td>
+			</tr>
+			<tr><td><br></td></tr>
+			<tr>
+				<td><h5>Regex :</h5></td>
+				<td><input type="text" name="exp" id="u-exp" size="24"/></td>
+			</tr>
+			<tr><td>or</td></tr>
+			<tr>
+				<td><h5>Function :</h5></td>
+				<td><input type="text" name="fnct" id="u-fnct" size="24"/></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td align="right">
+					<input type="button" id="addNewParamRule" value="Save">
+				</td>
+			</tr>
+		</table>
+	</div>
+	<br>
+	
+</div>
+
+<div id="manageRuleEditStart">
+	<br><br><br><br><br><br><br><br>
+	<center>
+		<h3>Select a rule to edit.</h3>
+	</center>
+</div>

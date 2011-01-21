@@ -1,0 +1,64 @@
+
+var start = {
+	id: 'manager-panel',
+	title: 'EnsKa Core Manager - Start page',
+	bodyStyle: 'padding:10px',
+	contentEl: 'start-content',
+	autoScroll: true
+};
+
+var frameworksDataStore = new Ext.data.JsonStore ( {
+		autoDestroy: true,
+		url: '?act=loadInterface&lt=FrmData',
+		root: 'items',
+		idProperty: 'id',
+		fields: ['id', 'name', 'version']
+	}
+);
+
+var msgOk = function(msg, fnct) {
+	Ext.Msg.show ( {
+			title: "EnsKa Core Manager",
+			msg: msg,
+			minWidth: 200,
+			modal: true,
+			icon: Ext.Msg.INFO,
+			buttons: Ext.Msg.OK
+		}
+	);
+};
+
+var msgWait = function(msg) {
+	Ext.MessageBox.show ( {
+			title: 'Please wait...',
+			msg: msg,
+			width:350,
+			wait: true,
+			waitConfig: {interval:100},
+			progress:true,
+			closable:false
+		}
+	);
+};
+
+var msgError = function(msg) {
+	Ext.Msg.show ( {
+			title:'EnsKa Core Manager',
+			msg: msg,
+			buttons: Ext.Msg.OK,
+			icon: Ext.MessageBox.WARNING,
+		}
+	);
+};
+
+var actionsShortcuts = function(obj) {
+	
+	var pan;
+	if (typeof(window[obj.id]) == "undefined") {
+		pan = obj.target.id.substr(0, strLen(obj.target.id) -4);
+		obj.id = pan;
+	}
+	var type = obj.id.substr(0, 3);
+	
+	if (type == "win") {
+		

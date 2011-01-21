@@ -1,0 +1,55 @@
+
+<div id="manageApps-content">
+	<div id="appsGridRender"></div>
+	<div id="appEditorRender"></div>
+</div>
+
+<div id="manageAppEditStart">
+	<br><br><br><br><br><br><br><br>
+	<center>
+		<h3>Select an application to edit.</h3>
+	</center>
+</div>
+
+<div id="live-update-apps">
+	<table>
+		<tr>
+			<td><h5>Update from :</h5></td>
+			<td><input type="text" id="url-update-app" size="50"></td>
+			<td>&nbsp;&nbsp;&nbsp;<?php $this->image('drive_network.png', Array('type'=>'usr', 'width'=>'16', 'height'=>'16')); ?></td>
+		</tr>
+		<tr>
+			<td><h5>Check update :</h5></td>
+			<td>
+				<select id="check-update-app">
+					<option value="D">Daily</option>
+					<option value="W">Weekly</option>
+					<option value="M">Monthly</option>
+				</select>
+			</td>
+			<td>&nbsp;&nbsp;&nbsp;<?php $this->image('calendar.png', Array('type'=>'usr', 'width'=>'16', 'height'=>'16')); ?></td>
+		</tr>
+		<tr>
+			<td><h5>Auto update :</h5></td>
+			<td><input type="checkbox" id="auto-update-app"></td>
+		</tr>
+		<!-- <tr>
+			<td><h5>Release type :</h5></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td>Stable :<input type="checkbox" id="release-S-update-app"></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td>Beta :<input type="checkbox" id="release-B-update-app"></td>
+		</tr> -->
+		<tr>
+			<td></td>
+			<td></td>
+			<td><input type="button" id="btn-check-update-app" value="Check now"></td>
+		</tr>
+	</table>
+	<br>
+	<div id="live-update-infos-app" />
+</div>

@@ -1,0 +1,121 @@
+if (obj.id == "win-manageEnvironment")
+{
+	var conn = new Ext.data.Connection(); 
+	var envType = 'none';
+	
+	var envTypes = [
+		['production', 'Production'],
+		['development', 'Development']
+	];
+	
+	var envTypeDataStore = new Ext.data.ArrayStore ( {
+			fields: ['id', 'name'],
+			data : envTypes
+		}
+	);
+	
+	var selectEnviron = {
+		id: 'select-environ',
+		xtype: 'combo',
+		name: 'comboSelectEnviron',
+		loadingText: 'Loading ...',
+		typeAhead: true,
+		hideTrigger: false,
+		triggerAction: 'all',
+		mode: 'local',
+		emptyText: 'Select an environment ...',
+		anchor:'95%',
+		displayField: 'name',
+		valueField: 'id',
+		store: envTypeDataStore,
+		minChars: 3,
+		selectOnFocus: true,
+		forceSelection: true,
+		onSelect: function (item) {
+			Ext.getCmp('select-environ').collapse();
+			Ext.getCmp('select-environ').setValue(item.data.name);
+			envType = item.data.id;
+		}
+	}
+	
+	var environWizard = {
+		plain: false,
+		height:235,
+		deferredRender: false,
+		id: 'environ-informations-form',
+		iconCls:'icon-infos',
+		layout:'form',
+		xtype: 'form',
+		html: '<div style="padding: 5px; background: white; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -100px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>environ_b.png" width=128 height=128></div>',
+		defaults: {width: 230},
+		bodyStyle: 'padding-left: 230px; padding-top: 60px;',
+		items: [ {
+				id:'environ-status',
+				fieldLabel: 'Environment',
+				anchor:'95%',
+				xtype: 'textfield',
+				readOnly: true
+			},
+				selectEnviron
+		],
+		buttons: [ {
+				text: 'Save',
+				id: 'environ-save-btn',
+				handler: function() {
+					msgWait('EnsKa Core is updating the environment...');
+					var req = conn.request ( {
+							url: '?act=execPlg&plg=manageCore',
+							method: 'POST',
+							params: "data=" + 'updateEnviron::' + envType,
+							success: function(resObj) {
+								if (resObj.responseText == 'success') {
+									msgOk('The environment has been changed !<br>The environment is: <b>' + envType +'</b>');
+									winmanageEnvironment.close();
+									fillCoreSettings();
+								}
+								else {
+									msgError(resObj.responseText);
+								}
+							}
+						}
+					);
+				}
+			}, {
+				text: 'Cancel',
+				handler: function() {
+					winmanageEnvironment.close();
+				}
+			}
+		]
+	};
+	
+	var req = conn.request ( {
+			url: '?act=loadInterface&lt=GetEnviron',
+			method: 'GET',
+			params: "data=",
+			success: function(resObj) {
+				Ext.get('environ-status').dom.value = resObj.responseText
+			}
+		}
+	);
+	
+	var winmanageEnvironment = new Ext.Window
+	(
+		{
+			closeAction: 'close',
+			layout: "fit",
+			modal: true,
+			plain: true,
+			resizable: false,
+			closable: true,
+			title: "Plateform environment",
+			width: 625,
+			height: 250,
+			border: false,
+			items: [
+				environWizard
+			]
+		}
+	);
+	winmanageEnvironment.show();
+}

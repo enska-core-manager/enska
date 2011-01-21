@@ -1,0 +1,331 @@
+var count_aff_roleEditor = 0;
+var conn = new Ext.data.Connection();
+var manageRoleEditTreeAuth = "auth";
+var manageRoleEditTreeUnAuth = "unauth";
+var manageRolesToolbar = new Ext.Toolbar();
+
+var rolesDataStore = new Ext.data.JsonStore ( {
+		autoDestroy: true,
+		url: '?act=loadInterface&lt=rolesData',
+		root: 'items',
+		idProperty: 'id',
+		fields: ['id', 'role', 'description']
+	}
+);
+
+manageRolesToolbar.add ( {
+		text:'Save',
+		tooltip: 'Save modifications',
+		icon: '<?php echo $this->get('img')?>save.png',
+		handler: function() {
+			var roleName = Ext.get('manage-acl-roleName').dom.value;
+			var	roleDescription = Ext.get('manage-acl-roleDescription').dom.value;
+			
+			var req = conn.request ( {
+					url: '?act=execPlg&plg=manageRoles',
+					method: 'POST',
+					params: "data=" + 'edit::' + manageRoleEditTreeAuth + '::' + manageRoleEditTreeUnAuth + '::' + roleName + '::' + roleDescription + '::' + roleStore.id,
+					success: function(resObj) {
+						if (resObj.responseText != "success") {
+							msgError(resObj.responseText);
+						}
+					}
+				}
+			);
+		}
+	}, {
+			text: 'Delete',
+			tooltip: 'Delete the selected role',
+			icon: '<?php echo $this->get('img')?>cross.png',
+			handler: confirmDeleteRole
+	},
+		'-', {
+		text: 'Roles :'
+	}, {
+		xtype: 'combo',
+		id: 'combo-select-acl',
+		name: 'comboSelectACL',
+		loadingText: 'Loading...',
+		typeAhead: true,
+		hideTrigger: false,
+		triggerAction: 'all',
+		mode: 'remote',
+		emptyText: '     Select a role...',
+		width: 200,
+		displayField: 'role',
+		valueField: 'description',
+		store: rolesDataStore,
+		minChars: 1,
+		onSelect: function (item) {
+			Ext.getCmp('combo-select-acl').collapse();
+			var getRolesArray = conn.request ( {
+					url: '?act=loadInterface&lt=GetSelectedRoleInfos',
+					method: 'GET',
+					params: "data=" + item.id,
+					success: function(resObj) {
+						try {
+							roleStore = Ext.util.JSON.decode(resObj.responseText);
+							Ext.getCmp('combo-select-acl').setValue('      ' + roleStore.role);
+							
+							Ext.get('manage-acl-roleName').dom.value = roleStore.role;
+							Ext.get('manage-acl-roleDescription').dom.value = roleStore.description;
+							
+							manageRoleEditTreeAuth = "auth";
+							manageRoleEditTreeUnAuth = "unauth";
+							
+							var authLoader = '?act=loadInterface&lt=Users&data=' + roleStore.id + ';1;pb.acl_infos';
+							Ext.getCmp('manage-role-auth-users-panel').loader.dataUrl = authLoader;
+
+							var unAuthLoader = '?act=loadInterface&lt=Users&data=' + roleStore.id + ';2;pb.acl_infos';
+							Ext.getCmp('manage-role-unauth-users-panel').loader.dataUrl = unAuthLoader;
+							
+							Ext.getCmp('manage-role-auth-users-panel').root.reload();
+							Ext.getCmp('manage-role-unauth-users-panel').root.reload();
+							Ext.getCmp('manage-role-users-panel').root.reload();
+						}
+						catch (err) {
+							Ext.getCmp('combo-select-acl').setValue('      ' + resObj.responseText);
+							Ext.getCmp('manage-role-wizard').activate('manage-role-informations-form');
+							Ext.get('manage-acl-roleName').dom.value = resObj.responseText;
+							Ext.get('manage-acl-roleDescription').dom.value = resObj.responseText;
+							delete roleStore;
+						}
+						
+					}
+				}
+			);
+			
+			if (count_aff_roleEditor == 0) {
+				Ext.getCmp('manage-role-wizard').activate('manage-role-informations-form');
+				count_aff_roleEditor++;
+			}
+		}
+	}
+);
+
+var manageRoles = {
+	id: 'manageRoles-panel',
+	title: 'EnsKa Core Manager - Manage roles',
+	contentEl: 'manageRoles-content',
+	autoScroll: true,
+	items: [
+		manageRolesToolbar
+	]
+};
+
+var manageRoleEditUsers = new Ext.tree.TreePanel ( {
+		title: 'Users',
+		id:'manage-role-users-panel',
+		cellCls:'td-manage-roles-users-panel',
+		iconCls:'icon-users',
+		border:true,
+		height: 175,
+		xtype: 'treepanel',
+		autoScroll: true,
+		rootVisible: true,
+		lines: true,
+		singleExpand: false,
+		useArrows: true,
+		animate: true,
+		dataUrl:'?act=loadInterface&lt=Users',
+		enableDD:true,
+		ddGroup:'listUsr',
+		root: {
+			nodeType: 'async',
+			draggable:false,
+			text: 'Users',
+			id:'node-root',
+			iconCls:'tree-server'
+		}
+	}
+);
+
+var manageRoleEditAuth = new Ext.tree.TreePanel ( {
+		title: 'Authorized users',
+		id:'manage-role-auth-users-panel',
+		cellCls:'td-manage-roles-auth-users-panel',
+		iconCls:'icon-user-auth',
+		border:true,
+		height: 175,
+		xtype: 'treepanel',
+		autoScroll: true,
+		rootVisible: true,
+		lines: true,
+		singleExpand: true,
+		useArrows: true,
+		animate: true,
+		dataUrl:'?act=loadInterface&lt=AUTHUsers',
+		enableDD:true,
+		ddGroup:'listUsr',
+		root: {
+			nodeType: 'async',
+			draggable:false,
+			text: 'Users',
+			iconCls:'tree-valid'
+		},
+		listeners: {
+			append: function (tree, parent, node, index) {
+				manageRoleEditTreeAuth = manageRoleEditTreeAuth + "/" + node.id
+			},
+			beforemovenode: function (tree, node, oldParent, newParent, index) {
+				var newAuth = "";
+				var tmpAuth = manageRoleEditTreeAuth.split('/');
+				for (i=0; i<tmpAuth.length; i++) {
+					if((tmpAuth[i] != node.id) && (node.id != '') && (tmpAuth[i] != '')) {
+						newAuth = newAuth + tmpAuth[i] + '/';
+						if ((i+1) < tmpAuth.length) {
+							newAuth = newAuth + '/';
+						}
+					}
+				}
+				manageRoleEditTreeAuth = newAuth;
+			}
+		}
+	}
+);
+
+var manageRoleEditUnAuth = new Ext.tree.TreePanel ( {
+		title: 'Unauthorized users',
+		id:'manage-role-unauth-users-panel',
+		cellCls:'td-manage-roles-unauth-users-panel',
+		iconCls:'icon-user-unauth',
+		border:true,
+		height: 175,
+		xtype: 'treepanel',
+		autoScroll: true,
+		rootVisible: true,
+		lines: true,
+		singleExpand: true,
+		useArrows: true,
+		animate: true,
+		dataUrl:'?act=loadInterface&lt=UNAUTHUsers',
+		enableDD:true,
+		ddGroup:'listUsr',
+		root: {
+			nodeType: 'async',
+			draggable:false,
+			text: 'Users',
+			iconCls:'tree-stop'
+		},
+		listeners: {
+			append: function (tree, parent, node, index) {
+				manageRoleEditTreeUnAuth = manageRoleEditTreeUnAuth + "/" + node.id
+			},
+			beforemovenode: function (tree, node, oldParent, newParent, index) {
+				var newUnAuth = "";
+				var tmpUnAuth = manageRoleEditTreeUnAuth.split('/');
+				for (i=0; i<tmpUnAuth.length; i++) {
+					if((tmpUnAuth[i] != node.id) && (node.id != '') && (tmpUnAuth[i] != '')) {
+						newUnAuth = newUnAuth + tmpUnAuth[i];
+						if ((i+1) < tmpUnAuth.length) {
+							newUnAuth = newUnAuth + '/';
+						}
+					}
+				}
+				manageRoleEditTreeUnAuth = newUnAuth;
+			}
+		}
+	}
+);
+
+var manageRoleWizard = {
+	xtype:'tabpanel',
+	id: 'manage-role-wizard',
+	plain: false,
+	border: false,
+	height: '100%',
+	deferredRender: false,
+	defaults:{bodyStyle:'padding:0px'},
+	contentEl: 'manageRoleEditStart',
+	items: [ {
+			title:'Basics informations',
+			id: 'manage-role-informations-form',
+			iconCls:'icon-infos',
+			layout:'form',
+			xtype: 'form',
+			html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -120px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>list_b.png" width=128 height=128></div>',
+			defaults: {width: 230},
+			bodyStyle: 'padding-left: 230px; padding-top: 50px;',
+			items: [ {
+					id:'manage-acl-roleName',
+					fieldLabel: 'Role name',
+					anchor:'95%',
+					xtype: 'textfield',
+					minLength: 3,
+					maxLength: 100,
+					minLengthText: 'Display name must be at least 3 characters long.',
+					maxLengthText: 'Display name must not be bigger than 100 characters long.',
+					blankText: 'You must give a Role name',
+					allowBlank:false
+				},
+				new Ext.form.TextArea ( {
+						id:'manage-acl-roleDescription',
+						wrap:'on',
+						anchor:'95%',
+						fieldLabel: 'Description',
+					}
+				)
+			]
+		},
+		{	
+			title:'Security',
+			iconCls:'icon-lock-break',
+			baseCls:'x-plain',
+			layout:'table',
+			layoutConfig: {
+				columns: 3
+			},
+			items: [
+				manageRoleEditUsers,
+				manageRoleEditAuth,
+				manageRoleEditUnAuth
+			]
+		}
+	]
+};
+
+var wEditor = new Ext.Panel ( {
+		id: 'roleEditor',
+		height: 280,
+		border: false,
+		items: [
+			manageRoleWizard
+		]
+	}
+);
+
+function confirmDeleteRole()
+{
+	try {
+		Ext.MessageBox.confirm('EnsKa Core Manager','Are you sure you want delete ' + roleStore.role + ' ?', deleteRole);
+	}
+	catch(err) {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select a role!');
+	}
+}
+
+function deleteRole(btn)
+{
+	if(btn == 'yes') {
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=manageRoles',
+				method: 'POST',
+				params: "data=" + 'delete::' + roleStore.id,
+				success: function(resObj) {
+					if (resObj.responseText == "success") {
+						Ext.get('manage-acl-roleName').dom.value = '';
+						Ext.get('manage-acl-roleDescription').dom.value = '';
+						Ext.getCmp('combo-select-acl').setValue('');
+						delete roleStore;
+					}
+					else {
+						msgError(resObj.responseText);
+					}
+				}
+			}
+		);
+	} 
+}
+
+wEditor.render('roleEditorRender');
+manageRoleEditUsers.getRootNode().expand();

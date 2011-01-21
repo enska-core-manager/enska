@@ -1,0 +1,19 @@
+if (obj.id == "win-%name%")
+{
+	var win%name% = new Ext.Window
+	(
+		{
+			closeAction: 'close',
+			layout: "fit",
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: "Plug-in: %DPLName%",
+			width: 625,
+			height: 320,
+			border: false
+		}
+	);
+	
+	win%name%.show();
+}

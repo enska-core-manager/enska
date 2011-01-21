@@ -1,0 +1,336 @@
+var	logsLoader;
+var selectedLogsWebsite = 'none';
+var selectedLogsWebsiteName = 'none';
+var conn = new Ext.data.Connection();
+var manageLogsToolbar = new Ext.Toolbar();
+var pathLogs;
+var fileLogs;
+
+var websitesDataStore = new Ext.data.JsonStore ( {
+		autoDestroy: true,
+		url: '?act=loadInterface&lt=WebsiteData',
+		root: 'items',
+		idProperty: 'id',
+		fields: ['id', 'dpl_name', 'id_name']
+	}
+);
+
+manageLogsToolbar.add ( {
+		text: 'Save change',
+		icon: '<?php echo $this->get('img')?>save.png',
+		handler: function() {
+			if(selectedLogsWebsite == "none") {
+				Ext.MessageBox.alert('EnsKa Core Manager','You must select a website!');
+				return;
+			}
+			var status = Ext.get('status-logs').dom.value
+			var folder = Ext.get('folder-logs').dom.value;
+			var maxSize = Ext.get('size-logs').dom.value;
+			var fileName = Ext.get('name-logs').dom.value;
+			
+			var tErrors = 'none';
+			if(Ext.get('t-error-logs').dom.checked) {
+				tErrors = Ext.get('t-error-logs').dom.value;
+			}
+			var tWarnings = 'none';
+			if(Ext.get('t-warning-logs').dom.checked) {
+				tWarnings = Ext.get('t-warning-logs').dom.value;
+			}
+			var tNotices = 'none';
+			if(Ext.get('t-notice-logs').dom.checked) {
+				tNotices = Ext.get('t-notice-logs').dom.value;
+			}
+			var tParses = 'none';
+			if(Ext.get('t-parse-logs').dom.checked) {
+				tParses = Ext.get('t-parse-logs').dom.value;
+			}
+			var tStrict = 'none';
+			if(Ext.get('t-strict-logs').dom.checked) {
+				tStrict = Ext.get('t-strict-logs').dom.value;
+			}
+			var tDeprecated = 'none';
+			if(Ext.get('t-deprecated-logs').dom.checked) {
+				tDeprecated = Ext.get('t-deprecated-logs').dom.value;
+			}
+			var tAll = 'none';
+			if(Ext.get('t-all-logs').dom.checked) {
+				tAll = Ext.get('t-all-logs').dom.value;
+			}
+			
+			var req = conn.request ( {
+					url: '?act=execPlg&plg=manageLogs',
+					method: 'POST',
+					params: "data=" + 'edit::' + selectedLogsWebsite + '::' + status + '::' + folder + '::' + maxSize + '::' + fileName + '::' + tErrors + '::' + tWarnings + '::' + tNotices + '::' + tParses + '::' + tStrict + '::' + tDeprecated + '::' + tAll,
+					success: function(resObj) {
+						if (resObj.responseText != "success") {
+							msgError(resObj.responseText);	
+						}
+					}
+				}
+			);
+		}
+	}, {
+		text: 'Purge',
+		icon: '<?php echo $this->get('img')?>trash.png',
+		handler: function() {
+			if(selectedLogsWebsite == "none") {
+				Ext.MessageBox.alert('EnsKa Core Manager','You must select a website!');
+				return;
+			}
+			var folder = Ext.get('folder-logs').dom.value;
+			var req = conn.request ( {
+					url: '?act=execPlg&plg=manageLogs',
+					method: 'POST',
+					params: "data=" + 'purge::' + folder,
+					success: function(resObj) {
+						if (resObj.responseText != "success") {
+							msgError(resObj.responseText);	
+						}
+					}
+				}
+			);
+		}
+	}, {
+		text: 'View',
+		icon: '<?php echo $this->get('img')?>book_open.png',
+		handler: function() {
+			if(selectedLogsWebsite == "none") {
+				Ext.MessageBox.alert('EnsKa Core Manager','You must select a website!');
+				return;
+			}
+			showLogsGrid();
+		}
+	}, {
+		text: 'Export',
+		icon: '<?php echo $this->get('img')?>book_next.png',
+		handler: function() {
+			if(selectedLogsWebsite == "none") {
+				Ext.MessageBox.alert('EnsKa Core Manager','You must select a website!');
+				return;
+			}
+			msgWait('EnsKa Core is exporting the logs file from ' + selectedLogsWebsiteName +'...');
+			var req = conn.request ( {
+					url: '?act=execPlg&plg=manageLogs',
+					method: 'POST',
+					params: "data=" + 'export::' + pathLogs + '::' + fileLogs,
+					success: function(resObj) {
+						if (resObj.responseText == 'success') {
+							msgOk('The logs ' + selectedLogsWebsiteName + ' has been exported !');
+						}
+						else {
+							msgError(resObj.responseText);
+						}
+					}
+				}
+			);
+		}
+	}, {
+		text: 'Website :'
+	}, {
+		xtype: 'combo',
+		id: 'combo-select-logs-websites',
+		name: 'comboSelectWebsites',
+		loadingText: 'Loading...',
+		typeAhead: true,
+		hideTrigger: false,
+		triggerAction: 'all',
+		mode: 'remote',
+		emptyText: '     Select a website...',
+		width: 200,
+		displayField: 'dpl_name',
+		valueField: 'id_name',
+		store: websitesDataStore,
+		minChars: 1,
+		onSelect: function (item) {
+			Ext.getCmp('combo-select-logs-websites').collapse();
+			Ext.getCmp('combo-select-logs-websites').setValue('     ' + item.data.dpl_name);
+			selectedLogsWebsite = item.data.id_name;
+			selectedLogsWebsiteName = item.data.dpl_name;
+			
+			var fillFields = conn.request ( {
+					url: '?act=loadInterface&lt=LogsSettings',
+					method: 'GET',
+					params: "data=" + item.data.id_name,
+					success: function(resObj) {
+						var res = resObj.responseText.split(';');
+						Ext.get('status-logs').dom.value = res[0];
+						Ext.get('size-logs').dom.value = res[1];
+						Ext.get('name-logs').dom.value = res[2];
+						Ext.get('folder-logs').dom.value = res[3];
+						
+						Ext.get('t-error-logs').dom.checked = false;
+						if (res[4] != 'none') {
+							Ext.get('t-error-logs').dom.checked = true;
+						}
+						
+						Ext.get('t-warning-logs').dom.checked = false;
+						if (res[5] != 'none') {
+							Ext.get('t-warning-logs').dom.checked = true;
+						}
+						
+						Ext.get('t-notice-logs').dom.checked = false;
+						if (res[6] != 'none') {
+							Ext.get('t-notice-logs').dom.checked = true;
+						}
+						
+						Ext.get('t-parse-logs').dom.checked = false;
+						if (res[7] != 'none') {
+							Ext.get('t-parse-logs').dom.checked = true;
+						}
+						
+						Ext.get('t-strict-logs').dom.checked = false;
+						if (res[8] != 'none') {
+							Ext.get('t-strict-logs').dom.checked = true;
+						}
+						
+						Ext.get('t-deprecated-logs').dom.checked = false;
+						if (res[9] != 'none') {
+							Ext.get('t-deprecated-logs').dom.checked = true;
+						}
+						
+						Ext.get('t-all-logs').dom.checked = false;
+						if (res[10] != 'none') {
+							Ext.get('t-all-logs').dom.checked = true;
+						}
+						
+						pathLogs = res[3];
+						fileLogs = res[2];
+					}
+				}
+			);
+			
+		}
+	}
+);
+
+var manageLogs = {
+	id: 'manageLogs-panel',
+	title: 'EnsKa Core Manager - Logs manager',
+	autoScroll: true,
+	contentEl: 'manageLogs-content',
+	autoScroll: true,
+	items: [
+		manageLogsToolbar
+	]
+};
+
+function showLogsGrid()
+{
+	var logsDataStore = new Ext.data.Store ( {
+			id: 'excludes-logs-datastore',
+			proxy: new Ext.data.HttpProxy ( {
+					url: '?act=loadInterface&lt=LogsGrid&data=' + pathLogs + '::' + fileLogs
+				}
+			),
+			reader: new Ext.data.JsonReader ( {
+					root: 'results',
+					totalProperty: 'total',
+					id: 'id'
+				}, [ 
+					{name: 'ID', type: 'int', mapping: 'id'},
+					{name: 'Type', type: 'string', mapping: 'type'},
+					{name: 'ErrId', type: 'string', mapping: 'errId'},
+					{name: 'ErrMsg', type: 'string', mapping: 'errMsg'},
+					{name: 'Where', type: 'string', mapping: 'where'},
+					{name: 'When', type: 'string', mapping: 'when'},
+					{name: 'Who', type: 'string', mapping: 'who'}
+				]
+			),
+			sortInfo: {
+				field: 'ID',
+				direction: "ASC"
+			}
+		}
+	);
+	
+	var logsGridColumnModel = new Ext.grid.ColumnModel 
+	( 
+		[ 
+			{
+				header: '#',
+				readOnly: true,
+				dataIndex: 'ID',
+				width: 50
+			},{
+				header: 'Error level',
+				dataIndex: 'Type',
+				width: 50
+			},{
+				header: 'Error ID',
+				dataIndex: 'ErrId',
+				width: 30,
+				renderer: function(value)
+				{ 
+					if (value == "0x4000") {
+						value = "PHP Error";
+					}
+					return value;
+				},
+				readOnly: true
+			},{
+				header: 'Message',
+				readOnly: true,
+				dataIndex: 'ErrMsg',
+				width: 1000
+			},{
+				header: 'File',
+				dataIndex: 'Where',
+				width: 500,
+				readOnly: true
+			},{
+				header: 'Date',
+				dataIndex: 'When',
+				width: 80,
+				readOnly: true
+			},{
+				header: 'User',
+				dataIndex: 'Who',
+				width: 50,
+				readOnly: true
+			}
+		]
+	);
+	logsGridColumnModel.defaultSortable= true;
+		
+	var logsGridEditorGrid =  new Ext.grid.EditorGridPanel ( {
+			id: 'logsGridListingEditorGrid',
+			store: logsDataStore,
+			cm: logsGridColumnModel,
+			enableColLock:false,
+			bbar: new Ext.PagingToolbar ( {
+					pageSize: 20,
+					store: logsDataStore,
+					displayInfo: true
+				}
+			)
+			/*,
+			tbar: [ {
+					text: 'Filter',
+					tooltip: 'Custom the logs view',
+					icon: '<?php echo $this->get('img')?>find.png',
+					handler: function () {
+						winFilterLogs.show();
+					}
+				}
+			]*/
+		}
+	);
+	logsDataStore.load({params: {start: 0, limit: 20}});
+	
+	var winLogsGrid = new Ext.Window ( {
+			closeAction: 'close',
+			layout: "fit",
+			modal: true,
+			resizable: true,
+			closable: true,
+			title: "Logs for " + selectedLogsWebsiteName,
+			width: 1000,
+			height: 600,
+			border: false,
+			items : [
+				logsGridEditorGrid
+			]
+		}
+	);
+	winLogsGrid.show();
+}

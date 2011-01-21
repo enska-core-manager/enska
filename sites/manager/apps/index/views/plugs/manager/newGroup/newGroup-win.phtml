@@ -1,0 +1,87 @@
+if (obj.id == "win-newGroup")
+{
+	var conn = new Ext.data.Connection();
+
+	var newGroupWizard =  {
+		plain: false,
+		height:235,
+		deferredRender: false,
+		id: 'new-group-informations-form',
+		iconCls:'icon-infos',
+		layout:'form',
+		xtype: 'form',
+		html: '<div style="padding: 5px; background: white; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -130px; left: -200px; position: relative;"><img src="ressources/sites/manager/index/images/group_add_b.png" width=128 height=128></div>',
+		defaults: {width: 230},
+		bodyStyle: 'padding-left: 230px; padding-top: 40px;',
+		items: [ {
+				id:'new-group-name',
+				fieldLabel: 'Name',
+				anchor:'95%',
+				xtype: 'textfield',
+				minLength: 3,
+				maxLength: 50,
+				minLengthText: 'Group\'s name must be at least 3 characters long.',
+				maxLengthText: 'Group\'s name must not be bigger than 20 characters long.',
+				blankText: 'You must give a group\'s name',
+				allowBlank:false
+			},
+			new Ext.form.TextArea ( {
+					id:'new-group-description',
+					wrap:'on',
+					anchor:'95%',
+					fieldLabel: 'Description',
+				}
+			)
+			
+		],
+		buttons: [ {
+				text: 'Save',
+				handler: function() {
+					var name = Ext.get('new-group-name').dom.value;
+					var description = Ext.get('new-group-description').dom.value;
+					
+					msgWait('EnsKa Core is creating the new group ' + name +'...');
+					
+					var req = conn.request ( {
+							url: '?act=execPlg&plg=newGroup',
+							method: 'POST',
+							params: "data=" + 'create::' + name + '::' + description,
+							success: function(resObj) {
+								if (resObj.responseText == 'success') {
+									msgOk('The group ' + name + ' has been created !');
+									groupsDataStore.reload();
+									winNewGroup.close();
+								}
+								else {
+									msgError(resObj.responseText);
+								}
+							}
+						}
+					);
+				}
+			}, {
+				text: 'Cancel',
+				handler: function() {
+					winNewGroup.close();
+				}
+			}
+		]
+	};
+
+	var winNewGroup = new Ext.Window ( {
+			closeAction: 'close',
+			layout: "fit",
+			modal: true,
+			resizable: false,
+			closable: true,
+			title: "Create a new group",
+			width: 625,
+			height: 230,
+			border: false,
+			items: [
+				newGroupWizard
+			]
+		}
+	);
+	winNewGroup.show();
+}

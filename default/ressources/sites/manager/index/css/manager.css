@@ -1,0 +1,755 @@
+﻿/*body {
+	font-family: Tahoma,Arial,Helvetica,sans-serif;
+	font-size:12px;
+	color:#333;
+	padding: 20px;
+}*/
+
+p {
+	margin:8px 20px;
+	line-height:18px;
+}
+
+#shortcuts ul{
+	padding: 5px;
+}
+
+#shortcuts ul li{
+	cursor: pointer;
+	padding-bottom: 5px;
+	color: royalblue;
+}
+
+#sht-content td{
+	padding-right: 20px;
+}
+
+lname{
+	cursor: pointer;
+	color: darkblue;
+	font-weight: bold;
+	font-size: 11px;
+}
+
+wname{
+	cursor: pointer;
+	color: darkblue;
+	font-weight: bold;
+	font-size: 11px;
+}
+
+lblName{
+	color: royalblue;
+	font-weight: bold;
+	font-size: 12px;
+}
+
+hr{
+	border:0;
+	border-bottom: 1px lightgray solid;
+	width: 85%;
+}
+
+#fs{
+	border: 0;
+	border-top: 1px lightblue solid;
+	padding: 15px;
+	-khtml-border-radius: 3px;
+	-moz-border-radius: 3px;
+	width: 100%;
+}
+
+#sht-content-websites{display: block;}
+#sht-content-users{display: block;}
+#sht-content-apps{display: block;}
+#sht-content-manager{display: block;}
+#sht-content-core{display: block;}
+
+#headShortcuts{
+	border: 0;
+	border-top: 1px lightblue solid;
+	padding-bottom: 15px;
+	font-weight: bold;
+	cursor: pointer;
+	width: 90%;
+}
+
+.cat-titles{
+	color:royalblue;
+	font-size: 18px;
+}
+
+#ct {
+  margin: auto;
+  width: 1020px;
+  /* not needed if you use a strict doctype */
+  text-align: left;
+}
+
+#main-layout table {
+  width: 100%;
+}
+
+.td-new-website-users-toolbar-panel {
+	height: 10px;
+	padding-bottom: 10px;
+}
+
+/* New website */
+.td-new-website-users-panel {
+	padding-top: 10px;
+	padding-right: 10px;
+	padding-left: 10px;
+	width: 200px;
+	vertical-align: top;
+}
+.td-new-website-auth-users-panel {
+	padding-top: 10px;
+	padding-right: 10px;
+	width: 200px;
+	vertical-align: top;
+}
+.td-new-website-unauth-users-panel {
+	padding-top: 10px;
+	padding-right: 10px;
+	width: 200px;
+	vertical-align: top;
+}
+
+/* Manage Website */
+.td-manage-website-users-panel {
+	padding-top: 10px;
+	padding-right: 10px;
+	padding-left: 100px;
+	width: 200px;
+	vertical-align: top;
+}
+.td-manage-website-auth-users-panel {
+	padding-top: 10px;
+	padding-right: 10px;
+	width: 200px;
+	vertical-align: top;
+}
+.td-manage-website-unauth-users-panel {
+	padding-top: 10px;
+	padding-right: 10px;
+	width: 200px;
+	vertical-align: top;
+}
+
+/* Manage Roles */
+.td-manage-roles-users-panel {
+	padding-top: 10px;
+	padding-right: 10px;
+	padding-left: 10px;
+	width: 200px;
+	vertical-align: top;
+}
+.td-manage-roles-auth-users-panel {
+	padding-top: 10px;
+	padding-right: 10px;
+	width: 200px;
+	vertical-align: top;
+}
+.td-manage-roles-unauth-users-panel {
+	padding-top: 10px;
+	padding-right: 10px;
+	width: 200px;
+	vertical-align: top;
+}
+
+
+.icon-drive-web
+{
+	background-image:url(../images/drive_web.png);
+}
+
+.icon-sitemap-color
+{
+	background-image:url(../images/sitemap_color.png);
+}
+
+.icon-package-green
+{
+	background-image:url(../images/package_green.png);
+}
+
+.icon-browse
+{
+	background-image:url(../images/folder_page_white.png);
+}
+
+.icon-key
+{
+	background-image:url(../images/key.png);
+}
+
+.icon-database
+{
+	background-image:url(../images/database.png);
+}
+
+.icon-infos
+{
+	background-image:url(../images/information.png);
+}
+
+.icon-page-white-php
+{
+	background-image:url(../images/page_white_php.png);
+}
+
+.icon-page-white-code-blue
+{
+	background-image:url(../images/page_white_code.png);
+}
+
+.icon-lock-break
+{
+	background-image:url(../images/lock_break.png);
+}
+
+.icon-page-white-gear
+{
+	background-image:url(../images/page_white_gear.png);
+}
+
+.icon-user-auth
+{
+	background-image:url(../images/group_key.png);
+}
+
+.icon-user-unauth
+{
+	background-image:url(../images/group_delete.png);
+}
+
+.icon-vcard
+{
+	background-image:url(../images/vcard.png);
+}
+
+.icon-rules
+{
+	background-image:url(../images/application_cascade.png);
+}
+
+.icon-users
+{
+	background-image:url(../images/group.png);
+}
+
+.icon-delete
+{
+	background-image:url(../images/cross.png);
+}
+
+.img-sht{
+	cursor: pointer;
+	padding: 6px;
+	background: white;
+	border: 2px transparent solid;
+	-khtml-border-radius: 10px;
+	-moz-border-radius: 10px;
+}
+
+.img-sht:hover{
+	background: lightblue;
+	border: 2px white solid;
+}
+
+/*.x-tree-node-collapsed .x-tree-node-icon{
+	background-image:url(server.png);
+}*/
+
+.x-tree-node-leaf .tree-tag-blue{
+	background-image:url(../images/tag_blue.png);
+}
+
+.x-tree-node-collapsed .tree-server{
+	background-image:url(../images/server.png);
+}
+
+.x-tree-node-expanded .tree-server{
+	background-image:url(../images/server.png);
+}
+
+.x-tree-node-collapsed .tree-website{
+	background-image:url(../images/website.png);
+}
+
+.x-tree-node-expanded .tree-website{
+	background-image:url(../images/website.png);
+}
+
+.x-tree-node-leaf .tree-website{
+	background-image:url(../images/website.png);
+}
+
+.x-tree-node-leaf .tree-user{
+	background-image:url(../images/user.png);
+}
+
+.x-tree-node-collapsed .tree-users{
+	background-image:url(../images/group.png);
+}
+.x-tree-node-expanded .tree-users{
+	background-image:url(../images/group.png);
+}
+
+.x-tree-node-leaf .tree-group{
+	background-image:url(../images/group.png);
+}
+.x-tree-node-collapsed .tree-groups{
+	background-image:url(../images/users.png);
+}
+.x-tree-node-expanded .tree-groups{
+	background-image:url(../images/users.png);
+}
+
+.x-tree-node-leaf .tree-rule{
+	background-image:url(../images/application_form.png);
+}
+
+.x-tree-node-leaf .tree-valid{
+	background-image:url(../images/accept.png);
+}
+.x-tree-node-collapsed .tree-valid{
+	background-image:url(../images/accept.png);
+}
+.x-tree-node-expanded .tree-valid{
+	background-image:url(../images/accept.png);
+}
+
+
+
+.x-tree-node-leaf .tree-stop{
+	background-image:url(../images/stop.png);
+}
+.x-tree-node-collapsed .tree-stop{
+	background-image:url(../images/stop.png);
+}
+.x-tree-node-expanded .tree-stop{
+	background-image:url(../images/stop.png);
+}
+
+/*.x-dd-drop-nodrop .x-dd-drop-icon{
+  background-image: url(../../../../images/extjs/default/dd/drop-no.gif);
+}
+
+.x-dd-drop-ok .x-dd-drop-icon{
+  background-image: url(../../../../images/extjs/default/dd/drop-yes.gif);
+}
+
+.x-dd-drop-ok-add .x-dd-drop-icon{
+  background-image: url(../../../../images/extjs/default/dd/drop-add.gif);
+}
+
+.x-view-selector {
+    background-color:#c3daf9;
+    border-color:#3399bb;
+	
+}.x-tree-node-expanded .x-tree-node-icon{
+	background-image:url(../../../../images/extjs/default/tree/folder-open.gif);
+}
+
+.x-tree-node-leaf .x-tree-node-icon{
+	background-image:url(../../../../images/extjs/default/tree/leaf.gif);
+}
+
+.x-tree-node-collapsed .x-tree-node-icon{
+	background-image:url(../../../../images/extjs/default/tree/folder.gif);
+}
+
+.x-tree-node-loading .x-tree-node-icon{
+	background-image:url(../../../../images/extjs/default/tree/loading.gif) !important;
+}*/
+
+.x-form-file-wrap {
+    position: relative;
+    height: 22px;
+}
+.x-form-file-wrap .x-form-file {
+	position: absolute;
+	right: 0;
+	-moz-opacity: 0;
+	filter:alpha(opacity: 0);
+	opacity: 0;
+	z-index: 2;
+    height: 22px;
+}
+.x-form-file-wrap .x-form-file-btn {
+	position: absolute;
+	right: 0;
+	z-index: 1;
+}
+.x-form-file-wrap .x-form-file-text {
+    position: absolute;
+    left: 0;
+    z-index: 3;
+    color: #777;
+}
+
+
+/*
+ * Cascading Style Sheet(CSS), for SemioDATA
+ * Author: Hugo Lavigne
+ * Copyright: 2009-2010 SemioDATA, All Rights Reserved
+ *
+ */
+
+img, div,a { behavior: url(iepngfix.htc) }
+
+/*
+====================================
+BODY
+====================================
+*/
+
+*{
+	margin:0;
+	padding:0;
+}
+
+body{
+	font-size: 12px;
+	font-family:"lucida grande",tahoma,verdana,arial,sans-serif;
+	color: #4B4B4B;
+}
+
+img{
+	border: 0;
+}
+
+h5{
+	font-size: 11px;
+	color: gray;
+}
+
+/*
+====================================
+HEAD
+====================================
+*/
+#head{
+	width: 100%;
+	/*background: #3B5998;*/
+	background-image:url(../images/headers/header_blue.gif);
+	background-repeat:repeat-x;
+	height: 40px;
+}
+
+#sysHeader {
+	border: 0px red solid;
+	height: 35px;
+	margin-top: -20px;
+	margin-left: 140px;
+	position: relative;
+	width: 94%;
+	text-align: right;
+	padding-top: 0px;
+}
+
+#titleBox{
+	position: relative;
+	margin-left: 20px;
+	top: 6px;
+	text-align: left;
+	width: 281px;
+	height: 27px;
+	border: 0px lightgray solid;
+	-khtml-border-radius: 7px;
+	-moz-border-radius: 7px;
+	color: white;
+	font-weight: bold;
+	font-size: 16px;
+	font-family:"lucida grande",tahoma,verdana,arial,sans-serif;
+	/*<img src="<?php echo $this->image('title.png'); ?>">*/
+}
+
+#subhead{
+	margin-top: 0px;
+	width: 100%;
+	background: #D1DDF0;
+	height: 25px;
+	border-bottom: 1px lightgray solid;
+}
+
+#header{
+	width: 95%;
+	margin-left:auto;
+	margin-right:auto;
+	padding-top: 8px;
+}
+
+/*
+====================================
+TOPMENU
+====================================
+*/
+
+#topmenuToolbar{
+	width: 100%;
+	margin-left:auto;
+	margin-right:auto;
+	height: 100%;
+	border: 0;
+}
+
+#topmenu ul{
+	height: 100%;
+}
+
+#topmenu li{
+	display: inline;
+	list-style: none;
+	border-right: 1px lightgray solid;
+	padding-right: 20px;
+	padding-left: 5px;
+	padding-top: 7px;
+	padding-bottom: 10px;
+}
+
+#topmenu li:hover{
+	background: white;
+}
+
+#topmenu li a{
+	text-decoration:none;
+	color: #003366;
+}
+
+#topmenu li a:hover{}
+
+/*
+====================================
+CONTENT
+====================================
+*/
+
+#browser-panel
+{
+	margin-top: 78px;
+}
+
+#container{
+	width: 100%;
+	height: 100%;
+	border: 0px solid red;
+}
+
+#main_content{
+	width: 76%;
+	height: 100%;
+	float: right;
+	border: 0px red solid;
+}
+
+#menu_content{
+	width: 22%;
+	height: 100%;
+	float: left;
+	border: 0px red solid;
+}
+
+#cbg{
+	background: #F7F7F7;
+	height: 100%;
+	width: 100%;
+	padding-right: 5px;
+}
+
+/*
+====================================
+MENU
+====================================
+*/
+
+#mheaderr{
+	height: 20px;
+	width: 100%;
+	background: #FFE15C;
+	color: #003366;
+	font-weight: bold;
+	font-size: 11px;
+	padding: 4px 0px 0px 5px;
+}
+
+
+#mhead{
+	height: 20px;
+	width: 100%;
+	background: #D1DDF0;
+	color: #003366;
+	font-weight: bold;
+	font-size: 11px;
+	padding: 4px 0px 0px 5px;
+}
+
+#lmenu{
+	width: 100%;
+}
+
+#lmenu li{
+	list-style: none;
+	padding: 5px;
+	border-bottom: 1px lightgray solid;
+	background: white;
+}
+
+#lmenu li:hover{
+	background: #F7F7F7;
+}
+
+/*
+====================================
+SEARCH
+====================================
+*/
+
+#searchbox{
+	width: 50px;
+	float: right;
+	position: relative;
+	top: -22px;
+	right: 150px;
+}
+
+/*
+====================================
+TABLES
+====================================
+*/
+
+.table_border_system{
+	border: 1px lightgray solid;
+}
+
+.table_head_system{
+	background: #D1DDF0;
+}
+
+.over_tr_system:hover{
+	background: #FFE15C;
+}
+
+/*
+====================================
+FORMS
+====================================
+*/
+
+.textbox{
+	border: 1px lightgray solid;
+	-khtml-border-radius: 4px;
+	-moz-border-radius: 4px;
+	color: royalblue;
+}
+
+.textbox :focus{
+	border: 15px red solid;
+}
+
+
+.text{
+	-khtml-border-radius: 5px;
+	-moz-border-radius: 5px;
+	color: gray;
+	border: 1px lightgray solid;
+	width: 100%;
+}
+
+.texta{
+	-khtml-border-radius: 5px;
+	-moz-border-radius: 5px;
+	color: gray;
+	border: 1px lightgray solid;
+	width: 100%;
+	height: 70px;
+}
+
+
+.bsubmit{
+	background: url(../images/zoom.png) white;
+	height: 16px;
+	width: 16px;
+	margin-left: -20px;
+	border: 0;
+}
+
+#btn_signup{
+	background: #67A54B;
+	border: 1px gray solid;
+	color: white;
+	font-weight: bold;
+	padding: 2px;
+	width: 100px;
+}
+
+#btn_signup a{
+	color: white;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+/*
+====================================
+SYSTEM
+====================================
+*/
+
+#box{
+	border: 1px lightgray solid;
+	background: #F7F7F7;
+}
+
+#box_warn{
+	border: 1px lightgray solid;
+	background: #FFE15C;
+}
+
+
+#btn_add_green{
+	background: #67A54B;
+	border: 1px gray solid;
+	color: white;
+	font-weight: bold;
+	padding: 5px;
+	width: 50px;
+}
+
+#btn_add_green a{
+	color: white;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+#btn_red{
+	background: #FF6666;
+	border: 1px gray solid;
+	color: white;
+	font-weight: bold;
+	padding: 5px;
+	width: 50px;
+}
+
+#btn_red a{
+	color: white;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+#ulpopup1 li{
+	list-style: square;
+	margin-left: 50px;
+	padding-bottom: 3px;
+}
+
+#noUpdate {
+	color: red;
+	display: block;
+}
+
+#isUpdate {
+	color: green;
+}

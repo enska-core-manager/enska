@@ -1,0 +1,11 @@
+# Régles de réécriture pour EnsKa Core
+RewriteEngine on
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule .* index.php
+
+# Sécurité : Ne pas autoriser le parcours de répertoires
+Options -Indexes
+
+# Configuration PHP
+php_flag magic_quotes_gpc off
+php_flag register_globals off

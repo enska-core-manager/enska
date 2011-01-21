@@ -1,0 +1,283 @@
+</head>
+	
+<body scroll="no" onLoad="toggleDivs();">
+
+<div id="head">
+	<div id="header">
+		<a href="http://www.<?php echo $this->get('domain'); ?>" style="color:white;text-decoration:none;"><h2 style="color: white;">EnsKa Core Manager <small>(preview)</small></a></h2>
+		<div id="sysHeader" >
+			<br>
+			<a href="login/logout" style="color: white; text-decoration:none; font-weight: bold;"><?php $this->image('user_logout.png'); ?> Logout</a>
+		</div>
+	</div>
+	
+	<div id="subhead">
+		<div id="topmenuToolbar" />
+	</div>
+</div>
+
+<div id="container" />
+
+<div style="display:none;">
+
+<div id="start-content">
+	
+	<div id="headShortcuts" onClick="toggleDiv('sht-content-websites')">Websites<?php $this->image('more.png'); ?></div>
+	<div id="sht-content-websites">
+		<table>
+			<tr>
+				<td align="center" valign="top">
+					<img class="img-sht" id="win-newWebsite-sht" src="ressources/sites/manager/index/images/world_add_m.png" /><br>
+					<lname id="win-newWebsite-sht">New website</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="manageWebsites-sht" src="ressources/sites/manager/index/images/world_m.png" /><br>
+					<lname id="manageWebsites-sht">Websites</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="win-newPlugin-sht" src="ressources/sites/manager/index/images/plugin_add_m.png" /><br>
+					<lname id="win-newWebsite-sht">New plug-in</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="managePlugins-sht" src="ressources/sites/manager/index/images/plugin_m.png" /><br>
+					<lname id="managePlugins-sht">Plug-ins</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="win-newFramework-sht" src="ressources/sites/manager/index/images/framework_add_m.png" /><br>
+					<lname id="win-newFramework-sht">New framework</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="manageFrameworks-sht" src="ressources/sites/manager/index/images/framework_m.png" /><br>
+					<lname id="manageFrameworks-sht">Frameworks</lname>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<br><br><br><br>
+	
+	<div id="headShortcuts" onClick="toggleDiv('sht-content-apps')">Applications<?php $this->image('more.png'); ?></div>
+	<div id="sht-content-apps">
+		<table>
+			<tr>
+				<td align="center" valign="top">
+					<img class="img-sht" id="win-newApp-sht" src="ressources/sites/manager/index/images/brick_add_m.png" /><br>
+					<lname id="win-newApp-sht">New application</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="manageApps-sht" src="ressources/sites/manager/index/images/bricks_m.png" /><br>
+					<lname id="manageApps-sht">Applications</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="win-newWService-sht" src="ressources/sites/manager/index/images/ws_add_b.png" width="32" height="32"/><br>
+					<lname id="win-newWService-sht">New WEBService</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="manageWServices-sht" src="ressources/sites/manager/index/images/ws_b.png" width="32" height="32"/><br>
+					<lname id="manageWServices-sht">WEB Services</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="win-newRule-sht" src="ressources/sites/manager/index/images/rule_add_m.png" /><br>
+					<lname id="win-newRule-sht">New form rule</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="manageRules-sht" src="ressources/sites/manager/index/images/rules_m.png" /><br>
+					<lname id="manageRules-sht">Form rules</lname>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<br><br><br><br>
+	
+	<div id="headShortcuts" onClick="toggleDiv('sht-content-users')">Users<?php $this->image('more.png'); ?></div>
+	<div id="sht-content-users">
+		<table>
+			<tr>
+				<td align="center" valign="top">
+					<img class="img-sht" id="win-newUser-sht" src="ressources/sites/manager/index/images/user_add_m.png" /><br>
+					<lname id="win-newUser-sht">New user</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="manageUsers-sht" src="ressources/sites/manager/index/images/group_m.png" /><br>
+					<lname id="manageUsers-sht">Users</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="win-newGroup-sht" src="ressources/sites/manager/index/images/users_add_m.png" /><br>
+					<lname id="win-newGroup-sht">New group</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="manageGroups-sht" src="ressources/sites/manager/index/images/users_m.png" /><br>
+					<lname id="manageGroups-sht">Groups</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="manageUsersOptions-sht" src="ressources/sites/manager/index/images/vcard_edit_m.png" /><br>
+					<lname id="manageUsersOptions-sht">Users options</lname>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<br><br>
+				</td>
+			</tr>
+			<tr>
+				<td align="center" valign="top">
+					<img class="img-sht" id="win-newACL-sht" src="ressources/sites/manager/index/images/role_add_m.png" /><br>
+					<lname id="win-newACL-sht">New role</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="manageRoles-sht" src="ressources/sites/manager/index/images/roles_m.png" /><br>
+					<lname id="manageRoles-sht">Roles</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="manageAuthentification-sht" src="ressources/sites/manager/index/images/group_key_m.png" /><br>
+					<lname id="manageAuthentification-sht">Authentification</lname>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<br><br><br><br>
+	
+	<div id="headShortcuts" onClick="toggleDiv('sht-content-core')">Core<?php $this->image('more.png'); ?></div>
+	<div id="sht-content-core">
+		<table>
+			<tr>
+				<td align="center" valign="top">
+					<img class="img-sht" id="win-importWizard-sht" src="ressources/sites/manager/index/images/import_m.png" width="32" height="32"/><br>
+					<lname id="win-importWizard-sht">Import wizard</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="win-exportWizard-sht" src="ressources/sites/manager/index/images/export_m.png" width="32" height="32"/><br>
+					<lname id="win-exportWizard-sht">Export wizard</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="win-systemBackup-sht" src="ressources/sites/manager/index/images/save_black_m.png" width="32" height="32"/><br>
+					<lname id="win-systemBackup-sht">System backup</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="win-manageEnvironment-sht" src="ressources/sites/manager/index/images/layers_m.png" /><br>
+					<lname id="win-manageEnvironment-sht">Plateform environment</lname>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<br><br>
+				</td>
+			</tr>
+			<tr>
+				<td align="center" valign="top">
+					<img class="img-sht" id="manageCore-sht" src="ressources/sites/manager/index/images/core_m.png" /><br>
+					<lname id="manageCore-sht">Core settings</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="manageDatabases-sht" src="ressources/sites/manager/index/images/server_database.png" /><br>
+					<lname id="manageDatabases-sht">Databases</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="manageLibraries-sht" src="ressources/sites/manager/index/images/page_white_code_m.png" /><br>
+					<lname id="manageLibraries-sht">Libraries</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="manageCache-sht" src="ressources/sites/manager/index/images/cache.png" /><br>
+					<lname id="manageCache-sht">Cache</lname>
+				</td>
+				<td>
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				<td align="center" valign="top">
+					<img class="img-sht" id="manageLogs-sht" src="ressources/sites/manager/index/images/logs.png" /><br>
+					<lname id="manageLogs-sht">Logs</lname>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<br><br><br><br>
+	
+</div>

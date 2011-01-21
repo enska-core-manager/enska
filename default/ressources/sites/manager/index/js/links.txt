@@ -1,0 +1,14 @@
+	/*
+	 * ================  Other modules  =======================
+	 */
+	 
+	/*
+	 * http://www.javascriptfr.com/tutoriaux/EXTJS-MINI-TUTO-INTERRACTION-AVEC-BASE-DONNEES_853.aspx
+	 * http://www.extjs.com/learn/Tutorial:Ext20_Tree_TreeLoader_PHP_MySQL
+	 * http://blogs.bigfish.tv/adam/2008/02/12/drag-and-drop-using-ext-js-with-the-cakephp-tree-behavior/
+	 * http://www.ibm.com/developerworks/web/library/wa-aj-extjs/
+	 * http://www.miamicoder.com/post/2010/02/15/Ext-JS-with-PHP-How-to-Create-Nodes-for-a-TreePanel.aspx --> COOL
+	 * http://miamicoder.com/post/2009/02/11/ExtJS-And-PHP-ndash3b-Grid-Panel-Sample.aspx --> COOL
+	 * http://examples.extjs.eu/
+	 */
+ 

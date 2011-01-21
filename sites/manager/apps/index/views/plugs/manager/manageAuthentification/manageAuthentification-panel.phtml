@@ -1,0 +1,36 @@
+
+<div id="manageAuthentification-content">
+	<br>
+	<fieldset id="fs"><legend><img src="<?php echo $this->get('img')?>group_key.png" width="16" height="16"> Authentification :</legend>
+		<table cellspacing="5">
+			<tr>
+				<td><h5>Engine :</h5></td>
+				<td>
+					<input type="text" id="auth-engine" size="20"/>
+				</td>
+			</tr>
+			<tr>
+				<td><h5>Default access page :</h5></td>
+				<td><input type="text" id="auth-default-page" size="50"></td>
+			</tr>
+			<tr>
+				<td><h5>Cookie time :</h5></td>
+				<td>
+					<table>
+						<tr>
+							<td><input type="text" size="2" id="auth-time"></td>
+							<td><small>seconds</small></td>
+						</tr>	
+					</table>
+				</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td valign=top><h5>Options :</h5></td>
+				<td>
+					<textarea id="auth-options" style="height: 100px; width:100%;"></textarea>
+				</td>
+			</tr>
+		</table>
+	</fieldset>
+</div>

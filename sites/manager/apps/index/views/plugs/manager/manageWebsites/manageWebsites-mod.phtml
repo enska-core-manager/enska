@@ -1,0 +1,592 @@
+var count_aff_websiteEditor = 0;
+var conn = new Ext.data.Connection();
+var manageWebsiteEditTreeAuth = "auth";
+var manageWebsiteEditTreeUnAuth = "unauth";
+var manageWebsitesToolbar = new Ext.Toolbar();
+
+var websitesDataStore = new Ext.data.JsonStore ( {
+		autoDestroy: true,
+		url: '?act=loadInterface&lt=WebsiteData',
+		root: 'items',
+		idProperty: 'id',
+		fields: ['id', 'dpl_name', 'id_name']
+	}
+);
+
+var manageWebsitesEditorMainMenu = new Ext.menu.Menu ( {
+		id: 'manage-website-editor-main-menu',
+		items: [ {
+				text: 'Delete',
+				icon: '<?php echo $this->get('img')?>cross.png',
+				handler: confirmDeleteWebsite
+			},
+				'-', {
+				text: 'Export',
+				icon: '<?php echo $this->get('img')?>export.png',
+				handler: confirmExportWebsite
+			}
+		]
+	}
+);
+
+manageWebsitesToolbar.add ( {
+		text:'Save',
+		tooltip: 'Save modifications',
+		icon: '<?php echo $this->get('img')?>save.png',
+		handler: function() {
+			var eDplName = Ext.get('manage-website-dplName').dom.value;
+			var	eIdName = Ext.get('manage-website-idName').dom.value;
+			var	eDescription = Ext.get('manage-website-description').dom.value;
+			var	eConfig = Ext.get('manage-website-config').dom.value;
+			var	eAppPath = Ext.get('manage-website-app-path').dom.value;
+			var	alias = Ext.get('manage-website-alias').dom.value;
+			
+			var req = conn.request ( {
+					url: '?act=execPlg&plg=manageWebsite',
+					method: 'POST',
+					params: "data=" + 'editByEditor::' + manageWebsiteEditTreeAuth + '::' + manageWebsiteEditTreeUnAuth + '::' + eConfig + '::' + eAppPath + '::' + eDescription + '::' + eDplName + '::' + eIdName + '::' + alias + '::' + websiteListingEditorGrid.selModel.getSelected().json.id,
+					success: function(resObj) {
+						if (resObj.responseText == "success") {
+							websitesDataStore.reload();
+							Ext.getCmp('left-panel').root.reload();
+						}
+						else {
+							msgError(resObj.responseText);
+						}
+					}
+				}
+			);
+		}
+	}, {
+		text:'Reload',
+		tooltip: 'Reload the manager',
+		icon: '<?php echo $this->get('img')?>reload.png',
+		handler: function() {
+			setTimeout("document.location = 'index'", 1);
+		}
+	},
+		'-', {
+		text:'Menu',
+		menu: manageWebsitesEditorMainMenu
+	}
+);
+
+var manageWebsites = {
+	id: 'manageWebsites-panel',
+	title: 'EnsKa Core Manager - Manage websites',
+	contentEl: 'manageWebsites-content',
+	autoScroll: true,
+	items: [
+		manageWebsitesToolbar
+	]
+};
+
+var websitesDataStore = new Ext.data.Store ( {
+		id: 'websites-datastore',
+		proxy: new Ext.data.HttpProxy ( {
+				url:'?act=loadInterface&lt=SitesGrid'
+			}
+		),
+		reader: new Ext.data.JsonReader ( {
+				root: 'results',
+				totalProperty: 'total',
+				id: 'id'
+			}, [ 
+				{name: 'IDWebsite', type: 'int', mapping: 'id', width: 5},
+				{name: 'DPLName', type: 'string', mapping: 'dpl_name', width: 200},
+				{name: 'IDName', type: 'string', mapping: 'id_name', width: 15},
+				{name: 'Description', type: 'string', mapping: 'description', width: 600},
+				{name: 'Framework', type: 'int', mapping: 'framework'}
+			]
+		),
+		sortInfo: {
+			field: 'IDWebsite',
+			direction: "ASC"
+		}
+	}
+);
+
+var websitesColumnModel = new Ext.grid.ColumnModel ( [ {
+			header: '#',
+			readOnly: true,
+			dataIndex: 'IDWebsite',
+			width: 25
+		}, {
+			header: 'Display name',
+			dataIndex: 'DPLName',
+			width: 500,
+			editor: new Ext.form.TextField ( {
+					allowBlank: false,
+					maxLength: 20,
+					maskRe: /([a-zA-Z0-9\s]+)$/
+				}
+			)
+		}, {
+			header: 'ID name',
+			dataIndex: 'IDName',
+			readOnly: true,
+			width: 200
+		}, {
+			header: 'Description',
+			dataIndex: 'Description',
+			width: 500,
+			editor: new Ext.form.TextField ( {
+				  allowBlank: false,
+				  maskRe: /([a-zA-Z0-9\s]+)$/
+				}
+			)
+		}
+	]
+);
+websitesColumnModel.defaultSortable = true;
+
+var websiteListingEditorGrid =  new Ext.grid.EditorGridPanel ( {
+		id: 'websiteListingEditorGrid',
+		store: websitesDataStore,
+		cm: websitesColumnModel,
+		enableColLock:false,
+		clicksToEdit:2,
+		selModel: new Ext.grid.RowSelectionModel ( {
+				singleSelect: true
+			}
+		),
+		height: 300,
+		anchor:'95%',
+		stateful: false
+	}
+);
+
+var manageWebsiteEditUsers = new Ext.tree.TreePanel ( {
+		title: 'Users',
+		id:'manage-website-users-panel',
+		cellCls:'td-new-website-users-panel',
+		iconCls:'icon-users',
+		border:true,
+		height: 175,
+		xtype: 'treepanel',
+		autoScroll: true,
+		rootVisible: true,
+		lines: true,
+		singleExpand: false,
+		useArrows: true,
+		animate: true,
+		dataUrl:'?act=loadInterface&lt=Users',
+		enableDD:true,
+		ddGroup:'listUsr',
+		root: {
+			nodeType: 'async',
+			draggable:false,
+			text: 'Users',
+			id:'node-root',
+			iconCls:'tree-server'
+		}
+	}
+);
+
+var manageWebsiteEditAuth = new Ext.tree.TreePanel ( {
+		title: 'Authorized users',
+		id:'manage-website-auth-users-panel',
+		cellCls:'td-new-website-auth-users-panel',
+		iconCls:'icon-user-auth',
+		border:true,
+		height: 175,
+		xtype: 'treepanel',
+		autoScroll: true,
+		rootVisible: true,
+		lines: true,
+		singleExpand: true,
+		useArrows: true,
+		animate: true,
+		dataUrl:'?act=loadInterface&lt=AUTHUsers',
+		enableDD:true,
+		ddGroup:'listUsr',
+		root: {
+			nodeType: 'async',
+			draggable:false,
+			text: 'Users',
+			iconCls:'tree-valid'
+		},
+		listeners: {
+			append: function (tree, parent, node, index) {
+				manageWebsiteEditTreeAuth = manageWebsiteEditTreeAuth + "/" + node.id
+			},
+			beforemovenode: function (tree, node, oldParent, newParent, index) {
+				var newAuth = "";
+				var tmpAuth = manageWebsiteEditTreeAuth.split('/');
+				for (i=0; i<tmpAuth.length; i++) {
+					if((tmpAuth[i] != node.id) && (node.id != '') && (tmpAuth[i] != '')) {
+						newAuth = newAuth + tmpAuth[i] + '/';
+						if ((i+1) < tmpAuth.length) {
+							newAuth = newAuth + '/';
+						}
+					}
+				}
+				manageWebsiteEditTreeAuth = newAuth;
+			}			
+		}
+	}
+);
+
+var manageWebsiteEditUnAuth = new Ext.tree.TreePanel ( {
+		title: 'Unauthorized users',
+		id:'manage-website-unauth-users-panel',
+		cellCls:'td-new-website-unauth-users-panel',
+		iconCls:'icon-user-unauth',
+		border:true,
+		height: 175,
+		xtype: 'treepanel',
+		autoScroll: true,
+		rootVisible: true,
+		lines: true,
+		singleExpand: true,
+		useArrows: true,
+		animate: true,
+		dataUrl:'?act=loadInterface&lt=UNAUTHUsers',
+		enableDD:true,
+		ddGroup:'listUsr',
+		root: {
+			nodeType: 'async',
+			draggable:false,
+			text: 'Users',
+			iconCls:'tree-stop'
+		},
+		listeners: {
+			append: function (tree, parent, node, index) {
+				manageWebsiteEditTreeUnAuth = manageWebsiteEditTreeUnAuth + "/" + node.id
+			},
+			beforemovenode: function (tree, node, oldParent, newParent, index) {
+				var newUnAuth = "";
+				var tmpUnAuth = manageWebsiteEditTreeUnAuth.split('/');
+				for (i=0; i<tmpUnAuth.length; i++) {
+					if((tmpUnAuth[i] != node.id) && (node.id != '') && (tmpUnAuth[i] != ''))
+					{
+						newUnAuth = newUnAuth + tmpUnAuth[i];
+						if ((i+1) < tmpUnAuth.length) {
+							newUnAuth = newUnAuth + '/';
+						}
+					}
+				}
+				manageWebsiteEditTreeUnAuth = newUnAuth;
+			}
+		}
+	}
+);
+
+var manageWebsiteWizard =  {
+	xtype:'tabpanel',
+	id: 'manage-website-wizard',
+	plain: false,
+	border: false,
+	height: 230,
+	deferredRender: false,
+	defaults:{bodyStyle:'padding:0px'},
+	contentEl: 'manageWebsiteEditStart',
+	items: [ {
+			title:'Basics informations',
+			id: 'manage-website-informations-form',
+			iconCls:'icon-infos',
+			layout:'form',
+			xtype: 'form',
+			html: '<div style="padding: 5px; background: whie; color: royalblue; font-size: 20px; font-weight: bold; width: 128px; height: 128px; top: -140px; left: -200px; position: relative;"><img src="<?php echo $this->get('img')?>world_b.png" width=128 height=128></div>',
+			defaults: {width: 230},
+			bodyStyle: 'padding-left: 230px; padding-top: 50px;',
+			items: [ {
+					id:'manage-website-dplName',
+					fieldLabel: 'Display name',
+					name: 'dpl_name',
+					anchor:'95%',
+					xtype: 'textfield',
+					minLength: 4,
+					maxLength: 50,
+					minLengthText: 'Display name must be at least 4 characters long.',
+					maxLengthText: 'Display name must not be bigger than 50 characters long.',
+					blankText: 'You must give a Display name',
+					allowBlank:false
+				}, {
+					id:'manage-website-idName',
+					fieldLabel: 'ID name',
+					xtype: 'textfield',
+					maxLength: 0,
+					anchor:'95%',
+					blankText: 'The ID Name can not be changed !',
+					maxLengthText: 'The ID Name can not be changed !',
+					allowBlank:false
+				}, {
+					id:'manage-website-framework',
+					fieldLabel: 'Framework',
+					xtype: 'textfield',
+					anchor:'95%'
+				},
+				new Ext.form.TextArea ( {
+						id:'manage-website-description',
+						wrap:'on',
+						anchor:'95%',
+						fieldLabel: 'Description',
+					}
+				)
+			]
+		}, {	
+			title:'Security',
+			iconCls:'icon-lock-break',
+			baseCls:'x-plain',
+			layout:'table',
+			layoutConfig: {
+				columns: 3
+			},
+			items: [
+				manageWebsiteEditUsers,
+				manageWebsiteEditAuth,
+				manageWebsiteEditUnAuth
+			]
+		}, {
+			cls:'x-plain',
+			title:'Settings',
+			iconCls:'icon-page-white-gear',
+			layout:'form',
+			bodyStyle: 'padding-top: 15px; padding: 15px;',
+			items: [ {
+					id:'manage-website-alias',
+					fieldLabel: 'Alias',
+					name: 'alias',
+					xtype: 'textfield',
+					anchor:'95%',
+					minLength: 1,
+					maxLength: 254,
+					minLengthText: 'Application path must be at least 1 character long.',
+					maxLengthText: 'Application path must not be bigger than 254 characters long.',
+					allowBlank:false,
+					blankText: 'You must give an alias path'
+				}, {
+					id:'manage-website-app-path',
+					fieldLabel: 'path_apps',
+					anchor:'95%',
+					xtype: 'textfield',
+					width: 460,
+					value: 'apps/',
+					minLength: 3,
+					maxLength: 254,
+					minLengthText: 'Application path must be at least 3 characters long.',
+					maxLengthText: 'Application path must not be bigger than 254 characters long.',
+					allowBlank:false,
+					blankText: 'You must give an applications path'
+				},
+				new Ext.form.TextArea ( {
+						id:'manage-website-config',
+						wrap:'off',
+						width: 460,
+						height: 160,
+						anchor:'95%',
+						fieldLabel: 'Local configuration',
+						name: 'config'
+					}
+				)
+			]
+		}
+	]
+};
+
+var wEditor = new Ext.Panel ( {
+		id: 'websiteEditor',
+		height: 280,
+		border: false,
+		items: [
+			manageWebsiteWizard
+		]
+	}
+);
+
+manageWebsiteEditUsers.getRootNode().expand();
+wEditor.render('websiteEditorRender');
+websitesDataStore.load();
+websiteListingEditorGrid.render('websitesGridRender');
+
+function saveGridWebsite(oGrid_event)
+{
+	var idWebsite = oGrid_event.record.data.IDWebsite;
+	var	dplName = oGrid_event.record.data.DPLName;
+	var	idName = oGrid_event.record.data.IDName;
+	var	description = oGrid_event.record.data.Description;
+	
+	var req = conn.request ( {
+			url: '?act=execPlg&plg=manageWebsite',
+			method: 'POST',
+			params: "data=" + 'editByGrid::' + idWebsite + '::' + dplName + '::' + idName + '::' + description,
+			success: function(resObj) {
+				if (resObj.responseText == "success") {
+					websitesDataStore.commitChanges();
+					websitesDataStore.reload();
+				}
+				else {
+					msgError(resObj.responseText);
+					websitesDataStore.reload();
+				}
+			}
+		}
+	);	
+}
+
+function confirmDeleteWebsite()
+{
+	if(websiteListingEditorGrid.selModel.getCount() == 1) {
+		if ((websiteListingEditorGrid.selModel.getSelected().json.id == 1) || (websiteListingEditorGrid.selModel.getSelected().json.id == 2)) {
+			Ext.Msg.show({title:'EnsKa Core Manager',msg: 'You can\'t delete a system website!',buttons: Ext.Msg.OK,icon: Ext.MessageBox.WARNING,});
+		}
+		else {
+			Ext.MessageBox.confirm('EnsKa Core Manager','Are you sure you want to delete ' + websiteListingEditorGrid.selModel.getSelected().json.dpl_name + ' ?', deleteWebsite);
+		}
+	}
+	else {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select a website!');
+	}
+}
+
+function deleteWebsite(btn)
+{
+	if(btn == 'yes') {
+		var selections = websiteListingEditorGrid.selModel.getSelections();
+		var wsites = new Array();
+		
+		for(i = 0; i < websiteListingEditorGrid.selModel.getCount(); i++) {
+			wsites.push(selections[i].json.id);
+		}
+		
+		var encoded_array = wsites;
+		
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=manageWebsite',
+				method: 'POST',
+				params: "data=" + 'delete::' + encoded_array,
+				success: function(resObj) {
+					if (resObj.responseText == "success") {
+						resetWebsiteEditor();
+						websitesDataStore.reload();
+						Ext.getCmp('left-panel').root.reload();
+					}
+					else {
+						msgError(resObj.responseText);
+						websitesDataStore.reload();
+					}
+				}
+			}
+		);
+		
+	} 
+}
+
+function confirmExportWebsite()
+{
+	if(websiteListingEditorGrid.selModel.getCount() == 1) {
+		if ((websiteListingEditorGrid.selModel.getSelected().json.id == 1) || (websiteListingEditorGrid.selModel.getSelected().json.id == 2)) {
+			Ext.Msg.show({title:'EnsKa Core Manager',msg: 'You can\'t export a system website!',buttons: Ext.Msg.OK,icon: Ext.MessageBox.WARNING,});
+		}
+		else {
+			Ext.MessageBox.confirm('EnsKa Core Manager','Are you sure you want to export ' + websiteListingEditorGrid.selModel.getSelected().json.dpl_name + ' ?', exportWebsite);
+		}
+	}
+	else {
+		Ext.MessageBox.alert('EnsKa Core Manager','You must select a website!');
+	}
+}
+
+function exportWebsite(btn)
+{
+	if(btn == 'yes') {
+		msgWait('EnsKa Core is exporting the website ' + websiteListingEditorGrid.selModel.getSelected().json.dpl_name +'...');
+		var req = conn.request ( {
+				url: '?act=execPlg&plg=manageWebsite',
+				method: 'POST',
+				params: "data=" + 'export::' + websiteListingEditorGrid.selModel.getSelected().json.id,
+				success: function(resObj) {
+					if (resObj.responseText == "success") {
+						msgOk('The website has been exported!');
+					}
+					else {
+						msgError(resObj.responseText);
+					}
+				}
+			}
+		);
+	} 
+}
+
+function fillWebsiteEditor()
+{	
+	if (count_aff_websiteEditor == 0) {
+		Ext.getCmp('manage-website-wizard').activate('manage-website-informations-form');
+		count_aff_websiteEditor++;
+	}
+	
+	Ext.get('manage-website-dplName').dom.value = websiteListingEditorGrid.selModel.getSelected().json.dpl_name;
+	Ext.get('manage-website-idName').dom.value = websiteListingEditorGrid.selModel.getSelected().json.id_name;
+	Ext.get('manage-website-description').dom.value = websiteListingEditorGrid.selModel.getSelected().json.description;
+	
+	manageWebsiteEditTreeAuth = "auth";
+	manageWebsiteEditTreeUnAuth = "unauth";
+	
+	var authLoader = '?act=loadInterface&lt=Users&data=' + websiteListingEditorGrid.selModel.getSelected().json.id + ';1;pb.site_auth';
+	Ext.getCmp('manage-website-auth-users-panel').loader.dataUrl = authLoader;
+
+	var unAuthLoader = '?act=loadInterface&lt=Users&data=' + websiteListingEditorGrid.selModel.getSelected().json.id + ';2;pb.site_auth';
+	Ext.getCmp('manage-website-unauth-users-panel').loader.dataUrl = unAuthLoader;
+	
+	Ext.getCmp('manage-website-auth-users-panel').root.reload();
+	Ext.getCmp('manage-website-unauth-users-panel').root.reload();
+	Ext.getCmp('manage-website-users-panel').root.reload();
+	
+	var fillPathApps = conn.request ( {
+			url: '?act=loadInterface&lt=GetPathApps',
+			method: 'GET',
+			params: "data=" + websiteListingEditorGrid.selModel.getSelected().json.id_name,
+			success: function(resObj) {
+				Ext.get('manage-website-app-path').dom.value = resObj.responseText;
+			}
+		}
+	);
+	
+	var fillLocalConfig = conn.request ( {
+			url: '?act=loadInterface&lt=GetLocalConfig',
+			method: 'GET',
+			params: "data=" + websiteListingEditorGrid.selModel.getSelected().json.id_name,
+			success: function(resObj) {
+				Ext.get('manage-website-config').dom.value = resObj.responseText;
+			}
+		}
+	);
+	
+	var fillFramework = conn.request ( {
+			url: '?act=loadInterface&lt=GetFrameworkName',
+			method: 'GET',
+			params: "data=" + websiteListingEditorGrid.selModel.getSelected().json.framework,
+			success: function(resObj) {
+				Ext.get('manage-website-framework').dom.value = resObj.responseText;
+			}
+		}
+	);
+	
+	var fillAlias = conn.request ( {
+			url: '?act=loadInterface&lt=GetSiteAlias',
+			method: 'GET',
+			params: "data=" + websiteListingEditorGrid.selModel.getSelected().json.id_name,
+			success: function(resObj) {
+				Ext.get('manage-website-alias').dom.value = resObj.responseText
+			}
+		}
+	);
+}
+
+function resetWebsiteEditor()
+{	
+	Ext.get('manage-website-dplName').dom.value = "";
+	Ext.get('manage-website-idName').dom.value = "";
+	Ext.get('manage-website-description').dom.value = "";
+	Ext.get('manage-website-app-path').dom.value = "";
+	Ext.get('manage-website-config').dom.value = "";
+	Ext.get('manage-website-framework').dom.value = "";
+	Ext.get('manage-website-alias').dom.value = "";
+	
+	manageWebsiteEditTreeAuth = "auth";
+	manageWebsiteEditTreeUnAuth = "unauth";
+}
+
+websiteListingEditorGrid.on('afteredit', saveGridWebsite);
+websiteListingEditorGrid.on('rowClick', fillWebsiteEditor);
